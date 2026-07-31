@@ -1,0 +1,181 @@
+export type BookSeed = {
+  title: string;
+  author: string;
+  category: string;
+  price: number;
+  cover: string;
+  bestseller?: boolean;
+  newRelease?: boolean;
+  featured?: boolean;
+};
+
+const COVERS = [
+  "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&q=80",
+  "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80",
+  "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&q=80",
+  "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&q=80",
+  "https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=400&q=80",
+  "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80",
+  "https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=400&q=80",
+  "https://images.unsplash.com/photo-1524995997942-a1c2e416a696?w=400&q=80",
+  "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&q=80",
+  "https://images.unsplash.com/photo-1621351183018-e2ace7a91f42?w=400&q=80",
+  "https://images.unsplash.com/photo-1589998059174-4d882f153b06?w=400&q=80",
+  "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&q=80",
+  "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80",
+  "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&q=80",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
+  "https://images.unsplash.com/photo-1609866138210-84bb689aef39?w=400&q=80",
+  "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=400&q=80",
+  "https://images.unsplash.com/photo-1516979187456-9a0a0b4b0b0b?w=400&q=80",
+  "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80",
+  "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&q=80",
+];
+
+function cover(i: number) {
+  return COVERS[i % COVERS.length];
+}
+
+export const BOOKS: BookSeed[] = [
+  // Fiction
+  { title: "The Midnight Library", author: "Matt Haig", category: "fiction", price: 8.99, cover: cover(0), bestseller: true },
+  { title: "Where the Crawdads Sing", author: "Delia Owens", category: "fiction", price: 8.49, cover: cover(5), bestseller: true },
+  { title: "The Seven Husbands of Evelyn Hugo", author: "Taylor Jenkins Reid", category: "fiction", price: 8.99, cover: cover(6), bestseller: true },
+  { title: "The Alchemist", author: "Paulo Coelho", category: "fiction", price: 6.99, cover: cover(13), bestseller: true },
+  { title: "1984", author: "George Orwell", category: "fiction", price: 7.49, cover: cover(3), bestseller: true },
+  { title: "To Kill a Mockingbird", author: "Harper Lee", category: "fiction", price: 7.99, cover: cover(1), bestseller: true },
+  { title: "The Great Gatsby", author: "F. Scott Fitzgerald", category: "fiction", price: 6.49, cover: cover(2), bestseller: false },
+  { title: "Little Fires Everywhere", author: "Celeste Ng", category: "fiction", price: 8.29, cover: cover(4), bestseller: true },
+  { title: "The Kite Runner", author: "Khaled Hosseini", category: "fiction", price: 8.99, cover: cover(7), bestseller: true },
+  { title: "A Man Called Ove", author: "Fredrik Backman", category: "fiction", price: 7.99, cover: cover(8), bestseller: true },
+  { title: "Normal People", author: "Sally Rooney", category: "fiction", price: 7.49, cover: cover(9), bestseller: true },
+  { title: "Circe", author: "Madeline Miller", category: "fiction", price: 9.49, cover: cover(10), bestseller: true },
+  { title: "The Night Circus", author: "Erin Morgenstern", category: "fiction", price: 8.79, cover: cover(11), bestseller: false },
+  { title: "Life of Pi", author: "Yann Martel", category: "fiction", price: 7.99, cover: cover(12), bestseller: true },
+  { title: "The Book Thief", author: "Markus Zusak", category: "fiction", price: 8.49, cover: cover(14), bestseller: true },
+  { title: "All the Light We Cannot See", author: "Anthony Doerr", category: "fiction", price: 9.99, cover: cover(15), bestseller: true },
+  { title: "The Goldfinch", author: "Donna Tartt", category: "fiction", price: 10.49, cover: cover(16), bestseller: false },
+  { title: "Beloved", author: "Toni Morrison", category: "fiction", price: 8.99, cover: cover(17), bestseller: false },
+  { title: "One Hundred Years of Solitude", author: "Gabriel García Márquez", category: "fiction", price: 9.49, cover: cover(18), bestseller: true },
+  { title: "The Handmaid's Tale", author: "Margaret Atwood", category: "fiction", price: 8.29, cover: cover(19), bestseller: true },
+  { title: "The Road", author: "Cormac McCarthy", category: "fiction", price: 7.99, cover: cover(0), bestseller: false },
+  { title: "Never Let Me Go", author: "Kazuo Ishiguro", category: "fiction", price: 7.49, cover: cover(1), bestseller: false },
+  { title: "The Secret History", author: "Donna Tartt", category: "fiction", price: 9.29, cover: cover(2), bestseller: true, newRelease: true },
+  { title: "Lessons in Chemistry", author: "Bonnie Garmus", category: "fiction", price: 9.99, cover: cover(3), bestseller: true, newRelease: true },
+
+  // Non-Fiction
+  { title: "Sapiens", author: "Yuval Noah Harari", category: "non-fiction", price: 11.99, cover: cover(10), bestseller: true },
+  { title: "Thinking, Fast and Slow", author: "Daniel Kahneman", category: "non-fiction", price: 12.99, cover: cover(11), bestseller: true },
+  { title: "The Psychology of Money", author: "Morgan Housel", category: "non-fiction", price: 11.49, cover: cover(16), bestseller: true },
+  { title: "Outliers", author: "Malcolm Gladwell", category: "non-fiction", price: 10.99, cover: cover(4), bestseller: true },
+  { title: "Freakonomics", author: "Steven D. Levitt", category: "non-fiction", price: 9.99, cover: cover(5), bestseller: false },
+  { title: "Quiet", author: "Susan Cain", category: "non-fiction", price: 10.49, cover: cover(6), bestseller: true },
+  { title: "The Body Keeps the Score", author: "Bessel van der Kolk", category: "non-fiction", price: 12.49, cover: cover(7), bestseller: true },
+  { title: "Bad Blood", author: "John Carreyrou", category: "non-fiction", price: 10.99, cover: cover(8), bestseller: true },
+  { title: "Surely You're Joking, Mr. Feynman!", author: "Richard Feynman", category: "non-fiction", price: 9.49, cover: cover(9), bestseller: false },
+  { title: "A Brief History of Time", author: "Stephen Hawking", category: "non-fiction", price: 11.99, cover: cover(12), bestseller: true },
+  { title: "The Immortal Life of Henrietta Lacks", author: "Rebecca Skloot", category: "non-fiction", price: 10.49, cover: cover(13), bestseller: false },
+  { title: "Homo Deus", author: "Yuval Noah Harari", category: "non-fiction", price: 12.49, cover: cover(14), bestseller: true },
+  { title: "Guns, Germs, and Steel", author: "Jared Diamond", category: "non-fiction", price: 11.49, cover: cover(15), bestseller: false },
+  { title: "The Tipping Point", author: "Malcolm Gladwell", category: "non-fiction", price: 9.99, cover: cover(17), bestseller: true },
+  { title: "Blink", author: "Malcolm Gladwell", category: "non-fiction", price: 9.49, cover: cover(18), bestseller: false },
+
+  // Mystery & Thriller
+  { title: "The Silent Patient", author: "Alex Michaelides", category: "mystery", price: 7.99, cover: cover(3), bestseller: true },
+  { title: "The Girl with the Dragon Tattoo", author: "Stieg Larsson", category: "mystery", price: 8.49, cover: cover(12), bestseller: true },
+  { title: "Gone Girl", author: "Gillian Flynn", category: "mystery", price: 7.99, cover: cover(17), bestseller: true },
+  { title: "The Thursday Murder Club", author: "Richard Osman", category: "mystery", price: 7.49, cover: cover(12), bestseller: true },
+  { title: "The Guest List", author: "Lucy Foley", category: "mystery", price: 7.99, cover: cover(0), bestseller: true },
+  { title: "The Woman in the Window", author: "A.J. Finn", category: "mystery", price: 7.49, cover: cover(1), bestseller: false },
+  { title: "Big Little Lies", author: "Liane Moriarty", category: "mystery", price: 8.29, cover: cover(2), bestseller: true },
+  { title: "In the Woods", author: "Tana French", category: "mystery", price: 8.49, cover: cover(4), bestseller: false },
+  { title: "The Da Vinci Code", author: "Dan Brown", category: "mystery", price: 7.99, cover: cover(5), bestseller: true },
+  { title: "And Then There Were None", author: "Agatha Christie", category: "mystery", price: 6.99, cover: cover(6), bestseller: true },
+  { title: "The Girl on the Train", author: "Paula Hawkins", category: "mystery", price: 7.49, cover: cover(7), bestseller: true },
+  { title: "Sharp Objects", author: "Gillian Flynn", category: "mystery", price: 7.99, cover: cover(8), bestseller: false },
+  { title: "The Couple Next Door", author: "Shari Lapena", category: "mystery", price: 7.29, cover: cover(9), bestseller: true },
+  { title: "The Maid", author: "Nita Prose", category: "mystery", price: 8.49, cover: cover(10), bestseller: true, newRelease: true },
+  { title: "The Last Thing He Told Me", author: "Laura Dave", category: "mystery", price: 8.99, cover: cover(11), bestseller: true },
+
+  // Romance
+  { title: "It Ends with Us", author: "Colleen Hoover", category: "romance", price: 7.99, cover: cover(7), bestseller: true },
+  { title: "Pride and Prejudice", author: "Jane Austen", category: "romance", price: 6.49, cover: cover(1), bestseller: true },
+  { title: "Beach Read", author: "Emily Henry", category: "romance", price: 8.49, cover: cover(2), bestseller: true },
+  { title: "The Love Hypothesis", author: "Ali Hazelwood", category: "romance", price: 8.99, cover: cover(3), bestseller: true, newRelease: true },
+  { title: "People We Meet on Vacation", author: "Emily Henry", category: "romance", price: 8.79, cover: cover(4), bestseller: true },
+  { title: "One Last Stop", author: "Casey McQuiston", category: "romance", price: 8.49, cover: cover(5), bestseller: false },
+  { title: "Red, White & Royal Blue", author: "Casey McQuiston", category: "romance", price: 9.29, cover: cover(6), bestseller: true },
+  { title: "Twisted Love", author: "Ana Huang", category: "romance", price: 7.99, cover: cover(8), bestseller: true },
+  { title: "Book Lovers", author: "Emily Henry", category: "romance", price: 9.49, cover: cover(9), bestseller: true, newRelease: true },
+  { title: "The Notebook", author: "Nicholas Sparks", category: "romance", price: 6.99, cover: cover(10), bestseller: true },
+  { title: "Me Before You", author: "Jojo Moyes", category: "romance", price: 7.49, cover: cover(11), bestseller: true },
+  { title: "The Hating Game", author: "Sally Thorne", category: "romance", price: 7.99, cover: cover(12), bestseller: false },
+  { title: "Verity", author: "Colleen Hoover", category: "romance", price: 8.29, cover: cover(13), bestseller: true },
+  { title: "Ugly Love", author: "Colleen Hoover", category: "romance", price: 7.49, cover: cover(14), bestseller: true },
+
+  // Sci-Fi & Fantasy
+  { title: "Project Hail Mary", author: "Andy Weir", category: "sci-fi-fantasy", price: 9.99, cover: cover(2), bestseller: true },
+  { title: "Dune", author: "Frank Herbert", category: "sci-fi-fantasy", price: 9.99, cover: cover(8), bestseller: true },
+  { title: "The Hobbit", author: "J.R.R. Tolkien", category: "sci-fi-fantasy", price: 8.99, cover: cover(9), bestseller: true },
+  { title: "Fourth Wing", author: "Rebecca Yarros", category: "sci-fi-fantasy", price: 9.49, cover: cover(8), bestseller: true, newRelease: true },
+  { title: "Iron Flame", author: "Rebecca Yarros", category: "sci-fi-fantasy", price: 9.99, cover: cover(9), bestseller: true, newRelease: true },
+  { title: "Foundation", author: "Isaac Asimov", category: "sci-fi-fantasy", price: 8.49, cover: cover(10), bestseller: true },
+  { title: "Ender's Game", author: "Orson Scott Card", category: "sci-fi-fantasy", price: 8.29, cover: cover(11), bestseller: true },
+  { title: "Neuromancer", author: "William Gibson", category: "sci-fi-fantasy", price: 8.99, cover: cover(12), bestseller: false },
+  { title: "The Martian", author: "Andy Weir", category: "sci-fi-fantasy", price: 9.49, cover: cover(13), bestseller: true },
+  { title: "Ready Player One", author: "Ernest Cline", category: "sci-fi-fantasy", price: 8.79, cover: cover(14), bestseller: true },
+  { title: "The Three-Body Problem", author: "Liu Cixin", category: "sci-fi-fantasy", price: 10.49, cover: cover(15), bestseller: true },
+  { title: "The Lord of the Rings", author: "J.R.R. Tolkien", category: "sci-fi-fantasy", price: 12.99, cover: cover(16), bestseller: true },
+  { title: "A Game of Thrones", author: "George R.R. Martin", category: "sci-fi-fantasy", price: 9.99, cover: cover(17), bestseller: true },
+  { title: "The Name of the Wind", author: "Patrick Rothfuss", category: "sci-fi-fantasy", price: 9.49, cover: cover(18), bestseller: true },
+  { title: "Mistborn: The Final Empire", author: "Brandon Sanderson", category: "sci-fi-fantasy", price: 9.29, cover: cover(19), bestseller: true },
+  { title: "The Way of Kings", author: "Brandon Sanderson", category: "sci-fi-fantasy", price: 11.99, cover: cover(0), bestseller: true },
+  { title: "Snow Crash", author: "Neal Stephenson", category: "sci-fi-fantasy", price: 8.99, cover: cover(1), bestseller: false },
+  { title: "Hyperion", author: "Dan Simmons", category: "sci-fi-fantasy", price: 9.49, cover: cover(2), bestseller: false },
+
+  // Children's
+  { title: "Harry Potter and the Philosopher's Stone", author: "J.K. Rowling", category: "childrens", price: 7.99, cover: cover(15), bestseller: true },
+  { title: "The Very Hungry Caterpillar", author: "Eric Carle", category: "childrens", price: 5.99, cover: cover(1), bestseller: true },
+  { title: "Charlotte's Web", author: "E.B. White", category: "childrens", price: 6.49, cover: cover(2), bestseller: true },
+  { title: "Matilda", author: "Roald Dahl", category: "childrens", price: 6.99, cover: cover(3), bestseller: true },
+  { title: "Wonder", author: "R.J. Palacio", category: "childrens", price: 7.49, cover: cover(4), bestseller: true },
+  { title: "The Gruffalo", author: "Julia Donaldson", category: "childrens", price: 5.49, cover: cover(5), bestseller: true },
+  { title: "Goodnight Moon", author: "Margaret Wise Brown", category: "childrens", price: 5.99, cover: cover(6), bestseller: true },
+  { title: "Where the Wild Things Are", author: "Maurice Sendak", category: "childrens", price: 6.29, cover: cover(7), bestseller: true },
+  { title: "The Lion, the Witch and the Wardrobe", author: "C.S. Lewis", category: "childrens", price: 7.99, cover: cover(8), bestseller: true },
+  { title: "Diary of a Wimpy Kid", author: "Jeff Kinney", category: "childrens", price: 6.99, cover: cover(9), bestseller: true },
+  { title: "Percy Jackson and the Lightning Thief", author: "Rick Riordan", category: "childrens", price: 7.49, cover: cover(10), bestseller: true },
+  { title: "The Cat in the Hat", author: "Dr. Seuss", category: "childrens", price: 5.49, cover: cover(11), bestseller: true },
+  { title: "Green Eggs and Ham", author: "Dr. Seuss", category: "childrens", price: 5.29, cover: cover(12), bestseller: true },
+  { title: "The Tale of Peter Rabbit", author: "Beatrix Potter", category: "childrens", price: 5.99, cover: cover(13), bestseller: false },
+
+  // Biography
+  { title: "Educated", author: "Tara Westover", category: "biography", price: 9.49, cover: cover(4), bestseller: true },
+  { title: "Becoming", author: "Michelle Obama", category: "biography", price: 10.99, cover: cover(14), bestseller: true },
+  { title: "Steve Jobs", author: "Walter Isaacson", category: "biography", price: 12.99, cover: cover(0), bestseller: true },
+  { title: "Shoe Dog", author: "Phil Knight", category: "biography", price: 11.49, cover: cover(1), bestseller: true },
+  { title: "Born a Crime", author: "Trevor Noah", category: "biography", price: 9.99, cover: cover(2), bestseller: true },
+  { title: "The Diary of a Young Girl", author: "Anne Frank", category: "biography", price: 7.99, cover: cover(3), bestseller: true },
+  { title: "Long Walk to Freedom", author: "Nelson Mandela", category: "biography", price: 10.49, cover: cover(5), bestseller: false },
+  { title: "Open", author: "Andre Agassi", category: "biography", price: 9.49, cover: cover(6), bestseller: false },
+  { title: "I'm Glad My Mom Died", author: "Jennette McCurdy", category: "biography", price: 10.99, cover: cover(7), bestseller: true, newRelease: true },
+  { title: "Greenlights", author: "Matthew McConaughey", category: "biography", price: 10.49, cover: cover(8), bestseller: true },
+  { title: "The Autobiography of Malcolm X", author: "Malcolm X", category: "biography", price: 9.99, cover: cover(9), bestseller: false },
+  { title: "Kitchen Confidential", author: "Anthony Bourdain", category: "biography", price: 9.29, cover: cover(10), bestseller: true },
+
+  // Self-Help
+  { title: "Atomic Habits", author: "James Clear", category: "self-help", price: 10.99, cover: cover(1), bestseller: true },
+  { title: "The Subtle Art of Not Giving a F*ck", author: "Mark Manson", category: "self-help", price: 9.99, cover: cover(0), bestseller: true },
+  { title: "Deep Work", author: "Cal Newport", category: "self-help", price: 11.49, cover: cover(2), bestseller: true },
+  { title: "The 7 Habits of Highly Effective People", author: "Stephen R. Covey", category: "self-help", price: 12.99, cover: cover(3), bestseller: true },
+  { title: "How to Win Friends and Influence People", author: "Dale Carnegie", category: "self-help", price: 8.99, cover: cover(4), bestseller: true },
+  { title: "The Power of Now", author: "Eckhart Tolle", category: "self-help", price: 10.49, cover: cover(5), bestseller: true },
+  { title: "Can't Hurt Me", author: "David Goggins", category: "self-help", price: 11.99, cover: cover(6), bestseller: true },
+  { title: "Think and Grow Rich", author: "Napoleon Hill", category: "self-help", price: 7.99, cover: cover(7), bestseller: false },
+  { title: "The Four Agreements", author: "Don Miguel Ruiz", category: "self-help", price: 8.49, cover: cover(8), bestseller: true },
+  { title: "You Are a Badass", author: "Jen Sincero", category: "self-help", price: 9.49, cover: cover(9), bestseller: true },
+  { title: "The 5 AM Club", author: "Robin Sharma", category: "self-help", price: 10.99, cover: cover(10), bestseller: false },
+  { title: "Daring Greatly", author: "Brené Brown", category: "self-help", price: 10.49, cover: cover(11), bestseller: true },
+  { title: "Mindset", author: "Carol S. Dweck", category: "self-help", price: 9.99, cover: cover(12), bestseller: true },
+  { title: "Grit", author: "Angela Duckworth", category: "self-help", price: 10.29, cover: cover(13), bestseller: true },
+];
