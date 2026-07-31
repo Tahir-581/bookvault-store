@@ -1563,9 +1563,13 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          is_audible_exclusive: boolean
           is_bestseller: boolean
           is_featured: boolean
+          is_first_reads: boolean
+          is_kindle_unlimited: boolean
           is_new_release: boolean
+          is_prime_eligible: boolean
           isbn: string | null
           language: string | null
           page_count: number | null
@@ -1589,9 +1593,13 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_audible_exclusive?: boolean
           is_bestseller?: boolean
           is_featured?: boolean
+          is_first_reads?: boolean
+          is_kindle_unlimited?: boolean
           is_new_release?: boolean
+          is_prime_eligible?: boolean
           isbn?: string | null
           language?: string | null
           page_count?: number | null
@@ -1615,9 +1623,13 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_audible_exclusive?: boolean
           is_bestseller?: boolean
           is_featured?: boolean
+          is_first_reads?: boolean
+          is_kindle_unlimited?: boolean
           is_new_release?: boolean
+          is_prime_eligible?: boolean
           isbn?: string | null
           language?: string | null
           page_count?: number | null

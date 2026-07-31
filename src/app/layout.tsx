@@ -45,7 +45,12 @@ export default async function RootLayout({
           announcement={announcement}
         />
         <main className="flex-1">{children}</main>
-        <StoreFooter siteName={config.name} columns={footer?.columns} />
+        <StoreFooter
+          siteName={config.name}
+          footer={footer}
+          currency={config.currency}
+          locale={config.locale}
+        />
         <Toaster position="top-center" richColors />
       </body>
     </html>

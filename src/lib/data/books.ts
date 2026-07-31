@@ -1,5 +1,6 @@
+import type { HomepageSectionConfig } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
-import type { BookWithFormats } from "@/lib/types";
+import type { BookWithFormats, DealWithBook } from "@/lib/types";
 
 export type BookFilters = {
   q?: string;
@@ -80,9 +81,12 @@ export async function getBooks(filters: BookFilters = {}) {
   })) as BookWithFormats[];
 
   if (filters.format) {
-    books = books.filter((b) =>
-      b.formats.some((f) => f.format === filters.format)
-    );
+    books = books.filter((b) => {
+      if (filters.format === "print") {
+        return b.formats.some((f) => f.format === "paperback" || f.format === "hardcover");
+      }
+      return b.formats.some((f) => f.format === filters.format);
+    });
   }
 
   if (filters.minPrice || filters.maxPrice) {
@@ -210,3 +214,150 @@ export async function getCategoryBySlug(slug: string) {
     .maybeSingle();
   return data;
 }
+
+function mapBookRow(book: Record<string, unknown>): BookWithFormats {
+  return {
+    ...book,
+    formats: ((book.store_book_formats as BookWithFormats["formats"]) || []).filter(
+      (f) => f.is_active
+    ),
+  } as BookWithFormats;
+}
+
+function filterByFormat(books: BookWithFormats[], format?: string) {
+  if (!format) return books;
+  if (format === "print") {
+    return books.filter((b) =>
+      b.formats.some((f) => f.format === "paperback" || f.format === "hardcover")
+    );
+  }
+  return books.filter((b) => b.formats.some((f) => f.format === format));
+}
+
+function pickDisplayFormat(book: BookWithFormats, preferred?: string) {
+  if (preferred === "print") {
+    return book.formats.find((f) => f.format === "paperback") || book.formats.find((f) => f.format === "hardcover");
+  }
+  if (preferred) {
+    return book.formats.find((f) => f.format === preferred);
+  }
+  return book.formats[0];
+}
+
+export async function getBooksByIds(ids: string[]) {
+  if (!hasSupabase() || ids.length === 0) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("store_books")
+    .select("*, store_book_formats(*)")
+    .in("id", ids)
+    .eq("is_active", true);
+  const books = (data || []).map((b) => mapBookRow(b as Record<string, unknown>));
+  const orderMap = new Map(ids.map((id, i) => [id, i]));
+  return books.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
+}
+
+export async function getBooksByCategory(slug: string, limit = 12, format?: string) {
+  if (!hasSupabase()) return [];
+  const supabase = await createClient();
+  const category = await getCategoryBySlug(slug);
+  if (!category) return [];
+
+  const { data: links } = await supabase
+    .from("store_book_categories")
+    .select("book_id")
+    .eq("category_id", category.id)
+    .limit(limit * 2);
+
+  const ids = (links || []).map((l) => l.book_id);
+  if (ids.length === 0) return [];
+
+  const books = await getBooksByIds(ids.slice(0, limit * 2));
+  return filterByFormat(books, format).slice(0, limit);
+}
+
+export async function getActiveDealsWithBooks(limit = 12): Promise<DealWithBook[]> {
+  if (!hasSupabase()) return [];
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+  const { data } = await supabase
+    .from("store_deals")
+    .select("*, store_books(*, store_book_formats(*))")
+    .eq("is_active", true)
+    .lte("starts_at", now)
+    .gte("ends_at", now)
+    .limit(limit);
+
+  return (data || []).map((deal) => {
+    const raw = deal.store_books as Record<string, unknown>;
+    const book = mapBookRow(raw);
+    return {
+      id: deal.id,
+      book_id: deal.book_id,
+      format_id: deal.format_id,
+      deal_price: Number(deal.deal_price),
+      starts_at: deal.starts_at,
+      ends_at: deal.ends_at,
+      is_active: deal.is_active,
+      book,
+    };
+  });
+}
+
+export async function resolveSectionBooks(config: HomepageSectionConfig) {
+  const limit = config.limit ?? 12;
+  const format = config.format;
+
+  if (config.book_ids?.length) {
+    const books = await getBooksByIds(config.book_ids);
+    return filterByFormat(books, format).slice(0, limit);
+  }
+
+  if (config.filter === "deals" || config.source === "deals") {
+    const deals = await getActiveDealsWithBooks(limit);
+    return deals.map((d) => d.book);
+  }
+
+  if (config.category) {
+    return getBooksByCategory(config.category, limit, format);
+  }
+
+  let sort: string | undefined;
+  switch (config.filter) {
+    case "bestseller":
+      sort = "bestseller";
+      break;
+    case "new_release":
+      sort = "newest";
+      break;
+    case "featured":
+      sort = undefined;
+      break;
+    default:
+      sort = "bestseller";
+  }
+
+  const { books } = await getBooks({ sort, limit: limit * 2 });
+  let filtered = books;
+
+  if (config.filter === "new_release") {
+    filtered = books.filter((b) => b.is_new_release);
+    if (filtered.length < limit) {
+      filtered = books;
+    }
+  } else if (config.filter === "featured") {
+    filtered = books.filter((b) => b.is_featured);
+    if (filtered.length < limit) {
+      filtered = books;
+    }
+  }
+
+  return filterByFormat(filtered, format).slice(0, limit);
+}
+
+export async function resolveSectionDeals(config: HomepageSectionConfig) {
+  const limit = config.limit ?? 12;
+  return getActiveDealsWithBooks(limit);
+}
+
+export { pickDisplayFormat };

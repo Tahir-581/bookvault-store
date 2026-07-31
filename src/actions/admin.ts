@@ -48,6 +48,7 @@ export async function createBookAction(formData: FormData) {
   const coverUrl = formData.get("cover_url") as string;
   const paperbackPrice = Number(formData.get("paperback_price"));
   const hardcoverPrice = Number(formData.get("hardcover_price"));
+  const audiobookPrice = Number(formData.get("audiobook_price"));
 
   const { data: book, error } = await supabase
     .from("store_books")
@@ -79,6 +80,14 @@ export async function createBookAction(formData: FormData) {
       format: "hardcover",
       price: hardcoverPrice,
       stock: 50,
+    });
+  }
+  if (audiobookPrice) {
+    formats.push({
+      book_id: book.id,
+      format: "audiobook",
+      price: audiobookPrice,
+      stock: 999,
     });
   }
   if (formats.length) await supabase.from("store_book_formats").insert(formats);
@@ -156,6 +165,182 @@ export async function updateHomepageSectionAction(
   await supabase.from("store_homepage_sections").update(data as never).eq("id", id);
   revalidatePath("/");
   revalidatePath("/admin/content");
+  return { success: true };
+}
+
+export async function createHomepageSectionAction(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  const configRaw = formData.get("config") as string;
+  const config = configRaw ? JSON.parse(configRaw) : {};
+
+  const { data: maxOrder } = await supabase
+    .from("store_homepage_sections")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  await supabase.from("store_homepage_sections").insert({
+    section_type: formData.get("section_type") as string,
+    title: formData.get("title") as string,
+    subtitle: (formData.get("subtitle") as string) || null,
+    config,
+    sort_order: (maxOrder?.sort_order ?? 0) + 1,
+    is_active: true,
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/content");
+  return { success: true };
+}
+
+export async function deleteHomepageSectionAction(id: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  await supabase.from("store_homepage_sections").delete().eq("id", id);
+  revalidatePath("/");
+  revalidatePath("/admin/content");
+  return { success: true };
+}
+
+export async function reorderHomepageSectionsAction(ids: string[]) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  for (let i = 0; i < ids.length; i++) {
+    await supabase
+      .from("store_homepage_sections")
+      .update({ sort_order: i + 1 })
+      .eq("id", ids[i]);
+  }
+  revalidatePath("/");
+  revalidatePath("/admin/content");
+  return { success: true };
+}
+
+export async function updateNavMenuAction(menuKey: string, items: unknown[]) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  await supabase
+    .from("store_navigation_menus")
+    .upsert(
+      {
+        menu_key: menuKey,
+        label: menuKey,
+        items: items as never,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "menu_key" }
+    );
+  revalidatePath("/");
+  revalidatePath("/admin/content");
+  return { success: true };
+}
+
+export async function updateFooterConfigAction(value: Record<string, unknown>) {
+  return updateSiteSettingAction("footer", value);
+}
+
+export async function createDealAction(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  const startsAt = formData.get("starts_at") as string;
+  const endsAt = formData.get("ends_at") as string;
+  await supabase.from("store_deals").insert({
+    book_id: formData.get("book_id") as string,
+    format_id: (formData.get("format_id") as string) || null,
+    deal_price: Number(formData.get("deal_price")),
+    starts_at: new Date(startsAt).toISOString(),
+    ends_at: new Date(endsAt).toISOString(),
+    is_active: true,
+  });
+  revalidatePath("/admin/deals");
+  revalidatePath("/deals");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function updateDealAction(id: string, data: Record<string, unknown>) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  await supabase.from("store_deals").update(data as never).eq("id", id);
+  revalidatePath("/admin/deals");
+  revalidatePath("/deals");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function deleteDealAction(id: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  await supabase.from("store_deals").delete().eq("id", id);
+  revalidatePath("/admin/deals");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function updateBookBadgesAction(bookId: string, badges: Record<string, boolean>) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  await supabase.from("store_books").update(badges as never).eq("id", bookId);
+  revalidatePath("/admin/books");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function updateBookAction(bookId: string, formData: FormData) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  const paperbackPrice = formData.get("paperback_price");
+  const audiobookPrice = formData.get("audiobook_price");
+
+  await supabase
+    .from("store_books")
+    .update({
+      title: formData.get("title") as string,
+      author_name: formData.get("author_name") as string,
+      cover_url: (formData.get("cover_url") as string) || null,
+      is_bestseller: formData.get("is_bestseller") === "on",
+      is_new_release: formData.get("is_new_release") === "on",
+      is_featured: formData.get("is_featured") === "on",
+      is_kindle_unlimited: formData.get("is_kindle_unlimited") === "on",
+      is_prime_eligible: formData.get("is_prime_eligible") === "on",
+      is_first_reads: formData.get("is_first_reads") === "on",
+      is_audible_exclusive: formData.get("is_audible_exclusive") === "on",
+    })
+    .eq("id", bookId);
+
+  if (paperbackPrice) {
+    await supabase
+      .from("store_book_formats")
+      .update({ price: Number(paperbackPrice) })
+      .eq("book_id", bookId)
+      .eq("format", "paperback");
+  }
+  if (audiobookPrice) {
+    const { data: existing } = await supabase
+      .from("store_book_formats")
+      .select("id")
+      .eq("book_id", bookId)
+      .eq("format", "audiobook")
+      .maybeSingle();
+    if (existing) {
+      await supabase
+        .from("store_book_formats")
+        .update({ price: Number(audiobookPrice) })
+        .eq("id", existing.id);
+    } else {
+      await supabase.from("store_book_formats").insert({
+        book_id: bookId,
+        format: "audiobook",
+        price: Number(audiobookPrice),
+        stock: 999,
+      });
+    }
+  }
+
+  revalidatePath("/admin/books");
+  revalidatePath("/");
   return { success: true };
 }
 

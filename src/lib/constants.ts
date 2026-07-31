@@ -1,13 +1,21 @@
 export const SITE_NAME = "BookVault";
 export const SITE_TAGLINE = "Your favourite books, delivered fast";
 
-export const BOOK_FORMATS = ["paperback", "hardcover", "ebook"] as const;
+export const BOOK_FORMATS = ["paperback", "hardcover", "ebook", "audiobook"] as const;
 export type BookFormat = (typeof BOOK_FORMATS)[number];
 
 export const FORMAT_LABELS: Record<BookFormat, string> = {
   paperback: "Paperback",
   hardcover: "Hardcover",
-  ebook: "Kindle eBook",
+  ebook: "Kindle Edition",
+  audiobook: "Audible Audiobook",
+};
+
+export const STOREFRONT_FORMAT_LABELS: Record<BookFormat, string> = {
+  paperback: "Paperback",
+  hardcover: "Hardcover",
+  ebook: "Kindle Edition",
+  audiobook: "Audible Audiobook",
 };
 
 export const ORDER_STATUSES = [

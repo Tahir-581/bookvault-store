@@ -37,6 +37,10 @@ export type Book = {
   is_featured: boolean;
   is_bestseller: boolean;
   is_new_release: boolean;
+  is_kindle_unlimited?: boolean;
+  is_prime_eligible?: boolean;
+  is_first_reads?: boolean;
+  is_audible_exclusive?: boolean;
   tags: string[] | null;
   is_active: boolean;
   created_at: string;
@@ -110,12 +114,42 @@ export type NavMenuItem = {
   children?: NavMenuItem[];
 };
 
+export type HomepageSectionConfig = {
+  filter?: "bestseller" | "new_release" | "featured" | "deals";
+  format?: "ebook" | "paperback" | "hardcover" | "audiobook" | "print";
+  category?: string;
+  limit?: number;
+  see_more_href?: string;
+  book_ids?: string[];
+  source?: string;
+  cta?: { label: string; href: string };
+  pills?: { label: string; href: string }[];
+};
+
 export type HomepageSection = {
   id: string;
-  section_type: "carousel" | "category_tiles" | "book_row" | "editorial";
+  section_type: "carousel" | "category_tiles" | "book_row" | "editorial" | "filter_pills";
   title: string | null;
   subtitle: string | null;
-  config: Record<string, unknown>;
+  config: HomepageSectionConfig;
   sort_order: number;
   is_active: boolean;
+};
+
+export type FooterConfig = {
+  columns?: { title: string; links: { label: string; href: string }[] }[];
+  subsidiaries?: { label: string; description: string; href: string }[];
+  legalLinks?: { label: string; href: string }[];
+  copyright?: string;
+};
+
+export type DealWithBook = {
+  id: string;
+  book_id: string;
+  format_id: string | null;
+  deal_price: number;
+  starts_at: string;
+  ends_at: string;
+  is_active: boolean;
+  book: BookWithFormats;
 };

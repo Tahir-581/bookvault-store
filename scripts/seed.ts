@@ -58,7 +58,11 @@ async function seed() {
         cover_url: book.cover,
         is_bestseller: book.bestseller || false,
         is_new_release: book.newRelease || false,
-        is_featured: book.bestseller || false,
+        is_featured: book.featured || book.bestseller || false,
+        is_kindle_unlimited: book.kindleUnlimited || false,
+        is_prime_eligible: book.prime || false,
+        is_first_reads: book.firstReads || false,
+        is_audible_exclusive: book.audibleExclusive || false,
         avg_rating: 3.5 + Math.random() * 1.5,
         review_count: Math.floor(Math.random() * 5000) + 100,
         is_active: true,
@@ -78,6 +82,9 @@ async function seed() {
       { book_id: inserted.id, format: "paperback", price: book.price, compare_at_price: book.price * 1.2, stock: 100 },
       { book_id: inserted.id, format: "hardcover", price: book.price + 8, compare_at_price: (book.price + 8) * 1.15, stock: 50 },
       { book_id: inserted.id, format: "ebook", price: book.price - 2, stock: 999 },
+      ...(book.audiobook
+        ? [{ book_id: inserted.id, format: "audiobook", price: book.price + 4, compare_at_price: (book.price + 4) * 1.1, stock: 999 }]
+        : []),
     ]);
 
     const catId = categoryMap.get(book.category);
@@ -92,6 +99,71 @@ async function seed() {
   }
   console.log(`Books seeded: ${bookCount}`);
 
+  // Add audiobook formats to existing bestsellers without one
+  const { data: allBestsellers } = await supabase
+    .from("store_books")
+    .select("id, title")
+    .eq("is_bestseller", true)
+    .eq("is_active", true)
+    .limit(25);
+
+  if (allBestsellers?.length) {
+    for (const book of allBestsellers) {
+      const { data: hasAudio } = await supabase
+        .from("store_book_formats")
+        .select("id")
+        .eq("book_id", book.id)
+        .eq("format", "audiobook")
+        .maybeSingle();
+      if (hasAudio) continue;
+
+      const { data: paperback } = await supabase
+        .from("store_book_formats")
+        .select("price")
+        .eq("book_id", book.id)
+        .eq("format", "paperback")
+        .maybeSingle();
+      if (!paperback) continue;
+
+      await supabase.from("store_book_formats").insert({
+        book_id: book.id,
+        format: "audiobook",
+        price: Number(paperback.price) + 4,
+        compare_at_price: Number(paperback.price) + 6,
+        stock: 999,
+      });
+    }
+    console.log("Audiobook formats added to bestsellers");
+  }
+
+  // Badge enrichment on existing books
+  const badgeUpdates = [
+    { match: "Midnight Library", kindle: true, prime: true },
+    { match: "Atomic Habits", prime: true },
+    { match: "Project Hail Mary", kindle: true, prime: true },
+    { match: "Harry Potter", prime: true, audible: true },
+    { match: "Silent Patient", firstReads: true },
+    { match: "Day Break", kindle: true, prime: true },
+    { match: "Seed", firstReads: true, featured: true },
+  ];
+  for (const u of badgeUpdates) {
+    const { data: matches } = await supabase
+      .from("store_books")
+      .select("id")
+      .ilike("title", `%${u.match}%`);
+    for (const m of matches || []) {
+      const patch: Record<string, boolean> = {};
+      if (u.kindle) patch.is_kindle_unlimited = true;
+      if (u.prime) patch.is_prime_eligible = true;
+      if (u.firstReads) patch.is_first_reads = true;
+      if (u.audible) patch.is_audible_exclusive = true;
+      if (u.featured) patch.is_featured = true;
+      if (Object.keys(patch).length) {
+        await supabase.from("store_books").update(patch).eq("id", m.id);
+      }
+    }
+  }
+
   // Lightning deals on random bestsellers
   const { data: bestsellers } = await supabase
     .from("store_books")
@@ -103,6 +175,7 @@ async function seed() {
   if (bestsellers?.length) {
     const now = new Date();
     const ends = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const shortEnds = new Date(now.getTime() + 12 * 60 * 60 * 1000);
     let dealCount = 0;
     for (const book of bestsellers) {
       const { data: format } = await supabase
@@ -126,7 +199,7 @@ async function seed() {
         format_id: format.id,
         deal_price: dealPrice,
         starts_at: now.toISOString(),
-        ends_at: ends.toISOString(),
+        ends_at: dealCount < 6 ? shortEnds.toISOString() : ends.toISOString(),
         is_active: true,
       });
       dealCount++;
@@ -152,23 +225,87 @@ async function seed() {
   console.log(`Total books in catalog: ${count}`);
 
   const homepageSections = [
-    { section_type: "carousel", title: "Today's Deals", subtitle: "Limited-time savings on bestsellers", config: { source: "deals" }, sort_order: 1 },
-    { section_type: "category_tiles", title: "Shop by Category", subtitle: "Explore our full range", config: {}, sort_order: 2 },
-    { section_type: "book_row", title: "Bestsellers", subtitle: "Most popular reads this week", config: { filter: "bestseller", limit: 12 }, sort_order: 3 },
-    { section_type: "book_row", title: "New Releases", subtitle: "Fresh titles just arrived", config: { filter: "new_release", limit: 12 }, sort_order: 4 },
-    { section_type: "book_row", title: "Fiction Favourites", subtitle: "Stories you'll love", config: { category: "fiction", limit: 12 }, sort_order: 5 },
-    { section_type: "book_row", title: "Sci-Fi & Fantasy", subtitle: "Other worlds await", config: { category: "sci-fi-fantasy", limit: 12 }, sort_order: 6 },
-    { section_type: "editorial", title: "Why BookVault?", subtitle: "Millions of titles, fast delivery, easy returns", config: { cta: { label: "Browse all books", href: "/books" } }, sort_order: 7 },
+    {
+      section_type: "filter_pills",
+      title: "Filter by",
+      subtitle: null,
+      config: {
+        pills: [
+          { label: "Kindle eBooks", href: "/books?format=ebook" },
+          { label: "Print Books", href: "/books?format=print" },
+          { label: "Audible Audiobooks", href: "/books?format=audiobook" },
+        ],
+      },
+      sort_order: 1,
+    },
+    {
+      section_type: "book_row",
+      title: "Best Sellers on Kindle",
+      subtitle: null,
+      config: { filter: "bestseller", format: "ebook", limit: 12, see_more_href: "/books?format=ebook&sort=bestseller" },
+      sort_order: 2,
+    },
+    {
+      section_type: "book_row",
+      title: "Best sellers in print",
+      subtitle: null,
+      config: { filter: "bestseller", format: "print", limit: 12, see_more_href: "/books?format=print&sort=bestseller" },
+      sort_order: 3,
+    },
+    {
+      section_type: "book_row",
+      title: "New releases in print",
+      subtitle: null,
+      config: { filter: "new_release", format: "print", limit: 12, see_more_href: "/books?format=print&sort=newest" },
+      sort_order: 4,
+    },
+    {
+      section_type: "book_row",
+      title: "New releases on Kindle",
+      subtitle: null,
+      config: { filter: "new_release", format: "ebook", limit: 12, see_more_href: "/books?format=ebook&sort=newest" },
+      sort_order: 5,
+    },
+    {
+      section_type: "carousel",
+      title: "Today's Deals",
+      subtitle: "Limited-time savings",
+      config: { source: "deals", limit: 12, see_more_href: "/deals" },
+      sort_order: 6,
+    },
+    {
+      section_type: "book_row",
+      title: "Best sellers in Original books",
+      subtitle: null,
+      config: { filter: "featured", limit: 12, see_more_href: "/books?sort=bestseller" },
+      sort_order: 7,
+    },
+    {
+      section_type: "book_row",
+      title: "Best sellers on Audible",
+      subtitle: null,
+      config: { filter: "bestseller", format: "audiobook", limit: 12, see_more_href: "/books?format=audiobook&sort=bestseller" },
+      sort_order: 8,
+    },
+    {
+      section_type: "book_row",
+      title: "Most popular listens",
+      subtitle: null,
+      config: { format: "audiobook", limit: 12, see_more_href: "/books?format=audiobook" },
+      sort_order: 9,
+    },
+    {
+      section_type: "editorial",
+      title: "Why BookVault?",
+      subtitle: "Millions of titles, fast delivery, easy returns",
+      config: { cta: { label: "Browse all books", href: "/books" } },
+      sort_order: 10,
+    },
   ];
 
-  const { count: sectionCount } = await supabase
-    .from("store_homepage_sections")
-    .select("*", { count: "exact", head: true });
-
-  if (!sectionCount) {
-    await supabase.from("store_homepage_sections").insert(homepageSections);
-    console.log(`Homepage sections seeded: ${homepageSections.length}`);
-  }
+  await supabase.from("store_homepage_sections").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from("store_homepage_sections").insert(homepageSections);
+  console.log(`Homepage sections seeded: ${homepageSections.length}`);
 
   console.log("Seed complete!");
 }
