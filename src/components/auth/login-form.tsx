@@ -48,7 +48,7 @@ export function LoginForm() {
         </Button>
       </form>
       <p className="mt-4 text-center text-sm">
-        New to BookVault?{" "}
+        New to Ilfaaz?{" "}
         <Link href="/auth/signup" className="text-link hover:text-link-hover">
           Create an account
         </Link>

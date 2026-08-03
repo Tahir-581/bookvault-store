@@ -11,7 +11,6 @@ import {
 import type { HomepageSection, HomepageSectionConfig } from "@/lib/types";
 
 const DEFAULT_PILLS = [
-  { label: "Kindle eBooks", href: "/books?format=ebook" },
   { label: "Print Books", href: "/books?format=print" },
   { label: "Audible Audiobooks", href: "/books?format=audiobook" },
 ];
@@ -89,7 +88,7 @@ async function SectionBlock({
       const cta = config.cta;
       return (
         <section className="mb-8 rounded-lg bg-secondary p-8 text-center text-secondary-foreground">
-          <h2 className="text-2xl font-bold">{section.title || "Why BookVault?"}</h2>
+          <h2 className="text-2xl font-bold">{section.title || "Why Ilfaaz?"}</h2>
           {section.subtitle && (
             <p className="mt-2 text-gray-300">{section.subtitle}</p>
           )}

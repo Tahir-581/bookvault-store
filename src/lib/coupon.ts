@@ -29,7 +29,7 @@ export function computeOrderTotals(
 ) {
   const {
     discountTotal = 0,
-    shippingFee = 3.99,
+    shippingFee = 4,
     taxRate = 0.2,
     freeShipping = false,
   } = options;

@@ -11,7 +11,7 @@ import {
   normalizeEmail,
 } from "@/lib/coupon";
 import { getSiteConfig } from "@/lib/data/settings";
-import { generateOrderNumber } from "@/lib/utils";
+import { formatPrice, generateOrderNumber } from "@/lib/utils";
 import { stripe } from "@/lib/stripe";
 import { getSiteUrl } from "@/lib/site-url";
 import { sendOrderConfirmationEmail } from "@/lib/email";
@@ -33,7 +33,7 @@ export async function validateCouponAction(code: string, subtotal: number, email
   if (coupon.max_uses && coupon.use_count >= coupon.max_uses)
     return { error: "Coupon usage limit reached" };
   if (coupon.min_order_amount && subtotal < coupon.min_order_amount)
-    return { error: `Minimum order of £${coupon.min_order_amount} required` };
+    return { error: `Minimum order of ${formatPrice(coupon.min_order_amount)} required` };
 
   const { data: used } = await supabase
     .from("store_coupon_redemptions")

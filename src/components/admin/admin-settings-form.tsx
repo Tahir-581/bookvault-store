@@ -20,6 +20,23 @@ export function AdminSettingsForm({
   function saveSite(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+
+    const freeShippingThreshold = Number(fd.get("freeShippingThreshold"));
+    const standardShipping = Number(fd.get("standardShipping"));
+    const expressShipping = Number(fd.get("expressShipping"));
+
+    for (const [label, value, raw] of [
+      ["Free shipping threshold", freeShippingThreshold, fd.get("freeShippingThreshold")],
+      ["Standard shipping", standardShipping, fd.get("standardShipping")],
+      ["Express shipping", expressShipping, fd.get("expressShipping")],
+    ] as const) {
+      const rawStr = String(raw ?? "").trim();
+      if (!rawStr || /[.,]/.test(rawStr) || !Number.isInteger(value) || value < 0) {
+        toast.error(`${label} must be a whole number (no decimals)`);
+        return;
+      }
+    }
+
     const config: SiteConfig = {
       ...siteConfig,
       name: fd.get("name") as string,
@@ -27,20 +44,23 @@ export function AdminSettingsForm({
       primaryColor: fd.get("primaryColor") as string,
       secondaryColor: fd.get("secondaryColor") as string,
       membershipName: fd.get("membershipName") as string,
-      freeShippingThreshold: Number(fd.get("freeShippingThreshold")),
+      freeShippingThreshold,
       taxRate: Number(fd.get("taxRate")),
-      standardShipping: Number(fd.get("standardShipping")),
-      expressShipping: Number(fd.get("expressShipping")),
+      standardShipping,
+      expressShipping,
       guestCheckout: fd.get("guestCheckout") === "on",
       reviewsEnabled: fd.get("reviewsEnabled") === "on",
       wishlistsEnabled: fd.get("wishlistsEnabled") === "on",
       membershipEnabled: fd.get("membershipEnabled") === "on",
-      ebooksEnabled: fd.get("ebooksEnabled") === "on",
       currency: siteConfig.currency,
       locale: siteConfig.locale,
     };
     startTransition(async () => {
-      await updateSiteSettingAction("site", config as unknown as Record<string, unknown>);
+      const result = await updateSiteSettingAction("site", config as unknown as Record<string, unknown>);
+      if (result && "error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
       await updateSiteSettingAction("announcement", {
         text: fd.get("announcementText") as string,
         isActive: fd.get("announcementActive") === "on",
@@ -87,16 +107,34 @@ export function AdminSettingsForm({
             <Input name="taxRate" type="number" step="0.01" defaultValue={siteConfig.taxRate} />
           </div>
           <div>
-            <Label>Free Shipping Threshold (£)</Label>
-            <Input name="freeShippingThreshold" type="number" defaultValue={siteConfig.freeShippingThreshold} />
+            <Label>Free Shipping Threshold (PKR)</Label>
+            <Input
+              name="freeShippingThreshold"
+              type="number"
+              step="1"
+              inputMode="numeric"
+              defaultValue={siteConfig.freeShippingThreshold}
+            />
           </div>
           <div>
-            <Label>Standard Shipping (£)</Label>
-            <Input name="standardShipping" type="number" step="0.01" defaultValue={siteConfig.standardShipping} />
+            <Label>Standard Shipping (PKR)</Label>
+            <Input
+              name="standardShipping"
+              type="number"
+              step="1"
+              inputMode="numeric"
+              defaultValue={siteConfig.standardShipping}
+            />
           </div>
           <div>
-            <Label>Express Shipping (£)</Label>
-            <Input name="expressShipping" type="number" step="0.01" defaultValue={siteConfig.expressShipping} />
+            <Label>Express Shipping (PKR)</Label>
+            <Input
+              name="expressShipping"
+              type="number"
+              step="1"
+              inputMode="numeric"
+              defaultValue={siteConfig.expressShipping}
+            />
           </div>
         </div>
       </div>
@@ -108,7 +146,6 @@ export function AdminSettingsForm({
           ["reviewsEnabled", "Reviews", siteConfig.reviewsEnabled],
           ["wishlistsEnabled", "Wishlists", siteConfig.wishlistsEnabled],
           ["membershipEnabled", "Membership Program", siteConfig.membershipEnabled],
-          ["ebooksEnabled", "eBooks", siteConfig.ebooksEnabled],
         ].map(([name, label, checked]) => (
           <label key={name as string} className="flex items-center gap-2">
             <input type="checkbox" name={name as string} defaultChecked={checked as boolean} />

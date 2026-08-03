@@ -22,7 +22,6 @@ export default async function DealsPage() {
         review_count: number;
         is_bestseller: boolean;
         is_new_release: boolean;
-        is_kindle_unlimited?: boolean;
         is_prime_eligible?: boolean;
         is_first_reads?: boolean;
         is_audible_exclusive?: boolean;
@@ -57,7 +56,7 @@ export default async function DealsPage() {
           Explore Deals
         </h1>
         <p className="mb-4 text-sm text-muted-foreground">
-          Limited-time offers on Kindle and print books
+          Limited-time offers on print books and audiobooks
         </p>
 
         {cards.length === 0 ? (
@@ -66,7 +65,7 @@ export default async function DealsPage() {
           </p>
         ) : (
           <ProductShelf
-            title="Kindle Daily Deals – Today Only"
+            title="Today's Deals"
             seeMoreHref="/books?sort=bestseller"
           >
             {cards.map(({ deal, book }) => (

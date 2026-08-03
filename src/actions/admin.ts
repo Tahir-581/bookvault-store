@@ -5,7 +5,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth";
 import { logAdminAction } from "@/actions/checkout";
 import { sendOrderStatusEmail } from "@/lib/email";
-import { slugify } from "@/lib/utils";
+import { parseWholeRupee, slugify } from "@/lib/utils";
 import {
   COVER_BUCKET,
   buildCoverObjectPath,
@@ -95,9 +95,24 @@ export async function createBookAction(formData: FormData) {
   const authorName = formData.get("author_name") as string;
   const slug = slugify(title);
   const description = formData.get("description") as string;
-  const paperbackPrice = Number(formData.get("paperback_price"));
-  const hardcoverPrice = Number(formData.get("hardcover_price"));
-  const audiobookPrice = Number(formData.get("audiobook_price"));
+
+  const paperback = parseWholeRupee(formData.get("paperback_price"), {
+    optional: true,
+    field: "Paperback price",
+  });
+  if (paperback.error) return { error: paperback.error };
+
+  const hardcover = parseWholeRupee(formData.get("hardcover_price"), {
+    optional: true,
+    field: "Hardcover price",
+  });
+  if (hardcover.error) return { error: hardcover.error };
+
+  const audiobook = parseWholeRupee(formData.get("audiobook_price"), {
+    optional: true,
+    field: "Audiobook price",
+  });
+  if (audiobook.error) return { error: audiobook.error };
 
   const cover = await resolveCoverUrl(formData, slug);
   if (cover.error) return { error: cover.error };
@@ -118,27 +133,27 @@ export async function createBookAction(formData: FormData) {
   if (error || !book) return { error: error?.message || "Failed" };
 
   const formats = [];
-  if (paperbackPrice) {
+  if (paperback.value) {
     formats.push({
       book_id: book.id,
       format: "paperback",
-      price: paperbackPrice,
+      price: paperback.value,
       stock: 100,
     });
   }
-  if (hardcoverPrice) {
+  if (hardcover.value) {
     formats.push({
       book_id: book.id,
       format: "hardcover",
-      price: hardcoverPrice,
+      price: hardcover.value,
       stock: 50,
     });
   }
-  if (audiobookPrice) {
+  if (audiobook.value) {
     formats.push({
       book_id: book.id,
       format: "audiobook",
-      price: audiobookPrice,
+      price: audiobook.value,
       stock: 999,
     });
   }
@@ -161,6 +176,22 @@ export async function deleteBookAction(bookId: string) {
 
 export async function updateSiteSettingAction(key: string, value: Record<string, unknown>) {
   await requireAdmin();
+
+  if (key === "site") {
+    for (const [field, label] of [
+      ["freeShippingThreshold", "Free shipping threshold"],
+      ["standardShipping", "Standard shipping"],
+      ["expressShipping", "Express shipping"],
+    ] as const) {
+      const parsed = parseWholeRupee(value[field] as string | number | null | undefined, {
+        field: label,
+        allowZero: true,
+      });
+      if (parsed.error) return { error: parsed.error };
+      value[field] = parsed.value;
+    }
+  }
+
   const supabase = await createServiceClient();
   await supabase
     .from("store_settings")
@@ -182,12 +213,18 @@ export async function moderateReviewAction(reviewId: string, status: string) {
 
 export async function createCouponAction(formData: FormData) {
   await requireAdmin();
+  const discount = parseWholeRupee(formData.get("discount_value"), {
+    field: "Discount value",
+    allowZero: true,
+  });
+  if (discount.error) return { error: discount.error };
+
   const supabase = await createServiceClient();
   await supabase.from("store_coupons").insert({
     code: (formData.get("code") as string).toUpperCase(),
     description: formData.get("description") as string,
     discount_kind: formData.get("discount_kind") as string,
-    discount_value: Number(formData.get("discount_value")),
+    discount_value: discount.value ?? 0,
     is_active: true,
   });
   await logAdminAction("create_coupon", "coupon", formData.get("code") as string);
@@ -295,13 +332,18 @@ export async function updateFooterConfigAction(value: Record<string, unknown>) {
 
 export async function createDealAction(formData: FormData) {
   await requireAdmin();
+  const dealPrice = parseWholeRupee(formData.get("deal_price"), {
+    field: "Deal price",
+  });
+  if (dealPrice.error) return { error: dealPrice.error };
+
   const supabase = await createServiceClient();
   const startsAt = formData.get("starts_at") as string;
   const endsAt = formData.get("ends_at") as string;
   await supabase.from("store_deals").insert({
     book_id: formData.get("book_id") as string,
     format_id: (formData.get("format_id") as string) || null,
-    deal_price: Number(formData.get("deal_price")),
+    deal_price: dealPrice.value ?? 0,
     starts_at: new Date(startsAt).toISOString(),
     ends_at: new Date(endsAt).toISOString(),
     is_active: true,
@@ -343,8 +385,18 @@ export async function updateBookBadgesAction(bookId: string, badges: Record<stri
 export async function updateBookAction(bookId: string, formData: FormData) {
   await requireAdmin();
   const supabase = await createServiceClient();
-  const paperbackPrice = formData.get("paperback_price");
-  const audiobookPrice = formData.get("audiobook_price");
+  const paperback = parseWholeRupee(formData.get("paperback_price"), {
+    optional: true,
+    field: "Paperback price",
+  });
+  if (paperback.error) return { error: paperback.error };
+
+  const audiobook = parseWholeRupee(formData.get("audiobook_price"), {
+    optional: true,
+    field: "Audiobook price",
+  });
+  if (audiobook.error) return { error: audiobook.error };
+
   const title = formData.get("title") as string;
   const slugBase = slugify(title) || bookId;
 
@@ -369,21 +421,20 @@ export async function updateBookAction(bookId: string, formData: FormData) {
       is_bestseller: formData.get("is_bestseller") === "on",
       is_new_release: formData.get("is_new_release") === "on",
       is_featured: formData.get("is_featured") === "on",
-      is_kindle_unlimited: formData.get("is_kindle_unlimited") === "on",
       is_prime_eligible: formData.get("is_prime_eligible") === "on",
       is_first_reads: formData.get("is_first_reads") === "on",
       is_audible_exclusive: formData.get("is_audible_exclusive") === "on",
     })
     .eq("id", bookId);
 
-  if (paperbackPrice) {
+  if (paperback.value != null) {
     await supabase
       .from("store_book_formats")
-      .update({ price: Number(paperbackPrice) })
+      .update({ price: paperback.value })
       .eq("book_id", bookId)
       .eq("format", "paperback");
   }
-  if (audiobookPrice) {
+  if (audiobook.value != null) {
     const { data: existing } = await supabase
       .from("store_book_formats")
       .select("id")
@@ -393,13 +444,13 @@ export async function updateBookAction(bookId: string, formData: FormData) {
     if (existing) {
       await supabase
         .from("store_book_formats")
-        .update({ price: Number(audiobookPrice) })
+        .update({ price: audiobook.value })
         .eq("id", existing.id);
     } else {
       await supabase.from("store_book_formats").insert({
         book_id: bookId,
         format: "audiobook",
-        price: Number(audiobookPrice),
+        price: audiobook.value,
         stock: 999,
       });
     }

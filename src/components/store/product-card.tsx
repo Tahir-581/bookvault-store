@@ -53,7 +53,7 @@ export function ProductCard({
       <Link
         href={`/dp/${book.slug}`}
         className={cn(
-          "group flex w-[148px] shrink-0 flex-col sm:w-[170px]",
+          "group flex w-[148px] shrink-0 flex-col transition-transform duration-300 hover:scale-105 sm:w-[170px]",
           className
         )}
       >
@@ -61,7 +61,7 @@ export function ProductCard({
           <CoverImage
             src={cover}
             alt={book.title}
-            className="object-contain p-0.5 transition group-hover:scale-[1.02]"
+            className="object-contain p-0.5 transition-transform duration-300 group-hover:scale-110"
             sizes="170px"
           />
           {showAudibleRibbon && <AudibleRibbon />}
@@ -97,7 +97,9 @@ export function ProductCard({
         <div className="mt-1 flex items-start text-foreground">
           <span className="text-xs">{amazonPrice.symbol}</span>
           <span className="text-xl font-medium leading-none">{amazonPrice.whole}</span>
-          <span className="text-xs leading-none">{amazonPrice.fraction}</span>
+          {amazonPrice.fraction ? (
+            <span className="text-xs leading-none">{amazonPrice.fraction}</span>
+          ) : null}
         </div>
         {comparePrice && comparePrice > price && (
           <p className="mt-0.5 text-xs text-muted-foreground line-through">
@@ -112,7 +114,7 @@ export function ProductCard({
     <Link
       href={`/dp/${book.slug}`}
       className={cn(
-        "group flex h-full flex-col rounded bg-card p-3 transition hover:shadow-md",
+        "group flex h-full flex-col rounded bg-card p-3 transition-transform duration-300 hover:scale-105 hover:shadow-md",
         className
       )}
     >
@@ -120,7 +122,7 @@ export function ProductCard({
         <CoverImage
           src={cover}
           alt={book.title}
-          className="object-contain p-2 transition group-hover:scale-105"
+          className="object-contain p-2 transition-transform duration-300 group-hover:scale-110"
           sizes="(max-width: 768px) 50vw, 20vw"
         />
         {book.is_bestseller && (

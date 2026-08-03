@@ -179,7 +179,7 @@ export default function CheckoutPage() {
               />
               <div>
                 <p className="font-medium">Standard Delivery</p>
-                <p className="text-sm text-gray-600">3-5 business days — £3.99</p>
+                <p className="text-sm text-gray-600">3-5 business days — {formatPrice(4)}</p>
               </div>
             </label>
             <label className="flex items-center gap-3 rounded border p-4">
@@ -191,7 +191,7 @@ export default function CheckoutPage() {
               />
               <div>
                 <p className="font-medium">Express Delivery</p>
-                <p className="text-sm text-gray-600">1-2 business days — £7.99</p>
+                <p className="text-sm text-gray-600">1-2 business days — {formatPrice(8)}</p>
               </div>
             </label>
             <div className="flex gap-2">

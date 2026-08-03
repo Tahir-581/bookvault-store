@@ -7,7 +7,6 @@ export type BookSeed = {
   bestseller?: boolean;
   newRelease?: boolean;
   featured?: boolean;
-  kindleUnlimited?: boolean;
   prime?: boolean;
   firstReads?: boolean;
   audibleExclusive?: boolean;
@@ -48,8 +47,8 @@ function cover(i: number) {
 
 export const BOOKS: BookSeed[] = [
   // Amazon-style showcase titles
-  { title: "Day Break", author: "Autumn Woods", category: "mystery", price: 9.99, cover: cover(0), bestseller: true, newRelease: true, kindleUnlimited: true, prime: true },
-  { title: "The Gold Hill Murders", author: "Rachel McLean", category: "mystery", price: 8.49, cover: cover(1), bestseller: true, kindleUnlimited: true },
+  { title: "Day Break", author: "Autumn Woods", category: "mystery", price: 9.99, cover: cover(0), bestseller: true, newRelease: true, prime: true },
+  { title: "The Gold Hill Murders", author: "Rachel McLean", category: "mystery", price: 8.49, cover: cover(1), bestseller: true },
   { title: "Seed", author: "Ania Ahlborn", category: "fiction", price: 10.49, cover: cover(2), bestseller: true, featured: true, firstReads: true },
   { title: "It Could Have Been Her", author: "Lisa Jewell", category: "mystery", price: 9.49, cover: cover(3), bestseller: true, audiobook: true, audibleExclusive: true },
   { title: "Odyssey", author: "Stephen Fry", category: "non-fiction", price: 12.99, cover: cover(4), bestseller: true, audiobook: true, audibleExclusive: true },
@@ -58,8 +57,8 @@ export const BOOKS: BookSeed[] = [
   { title: "Sleeping Beauties", author: "Stephen King", category: "fiction", price: 9.99, cover: cover(7), bestseller: true, audiobook: true, prime: true },
   { title: "The Odyssey", author: "Homer", category: "fiction", price: 7.49, cover: cover(8), bestseller: true, audiobook: true },
   { title: "Harry Potter and the Deathly Hallows", author: "J.K. Rowling", category: "childrens", price: 8.99, cover: cover(15), bestseller: true, audiobook: true, prime: true },
-  { title: "Jane Austen: The Complete Novels", author: "Jane Austen", category: "fiction", price: 14.99, cover: cover(1), bestseller: true, featured: true, kindleUnlimited: true },
-  { title: "A Pressing Engagement", author: "Rachel McLean", category: "mystery", price: 8.29, cover: cover(9), bestseller: true, newRelease: true, kindleUnlimited: true },
+  { title: "Jane Austen: The Complete Novels", author: "Jane Austen", category: "fiction", price: 14.99, cover: cover(1), bestseller: true, featured: true },
+  { title: "A Pressing Engagement", author: "Rachel McLean", category: "mystery", price: 8.29, cover: cover(9), bestseller: true, newRelease: true },
   { title: "The Chef", author: "James Patterson", category: "mystery", price: 9.49, cover: cover(10), bestseller: true, audiobook: true },
   { title: "Framed for Murder", author: "Richard Osman", category: "mystery", price: 8.79, cover: cover(11), bestseller: true, audiobook: true },
 

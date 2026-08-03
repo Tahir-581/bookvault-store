@@ -1,4 +1,4 @@
-# BookVault — Amazon-Inspired Books Store
+# Ilfaaz — Amazon-Inspired Books Store
 
 A full-featured single-store bookstore built with Next.js 16, Supabase, and Stripe.
 

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
+import { SITE_TAB_TITLE } from "@/lib/constants";
 import {
   getAnnouncement,
   getFooterConfig,
@@ -19,8 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const config = await getSiteConfig();
   return {
     title: {
-      default: `${config.name} — ${config.tagline}`,
-      template: `%s | ${config.name}`,
+      default: SITE_TAB_TITLE,
+      template: `%s | ${SITE_TAB_TITLE}`,
     },
     description: config.tagline,
   };
@@ -50,12 +51,7 @@ export default async function RootLayout({
           announcement={announcement}
         />
         <main className="min-w-0 max-w-full flex-1 overflow-x-clip">{children}</main>
-        <StoreFooter
-          siteName={config.name}
-          footer={footer}
-          currency={config.currency}
-          locale={config.locale}
-        />
+        <StoreFooter siteName={config.name} footer={footer} />
         <Toaster position="top-center" richColors />
       </body>
     </html>

@@ -1567,7 +1567,6 @@ export type Database = {
           is_bestseller: boolean
           is_featured: boolean
           is_first_reads: boolean
-          is_kindle_unlimited: boolean
           is_new_release: boolean
           is_prime_eligible: boolean
           isbn: string | null
@@ -1597,7 +1596,6 @@ export type Database = {
           is_bestseller?: boolean
           is_featured?: boolean
           is_first_reads?: boolean
-          is_kindle_unlimited?: boolean
           is_new_release?: boolean
           is_prime_eligible?: boolean
           isbn?: string | null
@@ -1627,7 +1625,6 @@ export type Database = {
           is_bestseller?: boolean
           is_featured?: boolean
           is_first_reads?: boolean
-          is_kindle_unlimited?: boolean
           is_new_release?: boolean
           is_prime_eligible?: boolean
           isbn?: string | null

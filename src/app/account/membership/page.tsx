@@ -18,7 +18,7 @@ export default async function MembershipPage() {
       <h1 className="mb-6 text-2xl font-bold">{config.membershipName} Membership</h1>
       <div className="rounded-lg bg-white p-6 shadow-sm">
         <p className="text-3xl font-bold">
-          {formatPrice(membership?.price_monthly || 7.99)}/month
+          {formatPrice(membership?.price_monthly || 8)}/month
         </p>
         <p className="mt-2 text-gray-600">{membership?.description}</p>
         <ul className="mt-4 space-y-2">

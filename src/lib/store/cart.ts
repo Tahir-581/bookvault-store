@@ -73,6 +73,6 @@ export const useCartStore = create<CartState>()(
       subtotal: () =>
         get().items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
     }),
-    { name: "bookvault-cart" }
+    { name: "ilfaaz-cart" }
   )
 );

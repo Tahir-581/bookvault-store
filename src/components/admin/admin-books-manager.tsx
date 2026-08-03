@@ -14,7 +14,6 @@ const BADGE_FIELDS = [
   { name: "is_bestseller", label: "Bestseller" },
   { name: "is_new_release", label: "New Release" },
   { name: "is_featured", label: "Featured" },
-  { name: "is_kindle_unlimited", label: "Kindle Unlimited" },
   { name: "is_prime_eligible", label: "Prime" },
   { name: "is_first_reads", label: "First Reads" },
   { name: "is_audible_exclusive", label: "Audible Exclusive" },
@@ -162,16 +161,16 @@ export function AdminBooksManager({ books }: { books: BookWithFormats[] }) {
           </div>
           <CoverFields inputId="create-cover-file" />
           <div>
-            <Label>Paperback Price (£)</Label>
-            <Input name="paperback_price" type="number" step="0.01" />
+            <Label>Paperback Price (PKR)</Label>
+            <Input name="paperback_price" type="number" step="1" inputMode="numeric" />
           </div>
           <div>
-            <Label>Hardcover Price (£)</Label>
-            <Input name="hardcover_price" type="number" step="0.01" />
+            <Label>Hardcover Price (PKR)</Label>
+            <Input name="hardcover_price" type="number" step="1" inputMode="numeric" />
           </div>
           <div>
-            <Label>Audiobook Price (£)</Label>
-            <Input name="audiobook_price" type="number" step="0.01" />
+            <Label>Audiobook Price (PKR)</Label>
+            <Input name="audiobook_price" type="number" step="1" inputMode="numeric" />
           </div>
         </div>
         <Button type="submit" className="mt-4" disabled={pending}>
@@ -201,12 +200,24 @@ export function AdminBooksManager({ books }: { books: BookWithFormats[] }) {
               existingUrl={editing.cover_url}
             />
             <div>
-              <Label>Paperback Price (£)</Label>
-              <Input name="paperback_price" type="number" step="0.01" defaultValue={paperback?.price || ""} />
+              <Label>Paperback Price (PKR)</Label>
+              <Input
+                name="paperback_price"
+                type="number"
+                step="1"
+                inputMode="numeric"
+                defaultValue={paperback?.price || ""}
+              />
             </div>
             <div>
-              <Label>Audiobook Price (£)</Label>
-              <Input name="audiobook_price" type="number" step="0.01" defaultValue={audiobook?.price || ""} />
+              <Label>Audiobook Price (PKR)</Label>
+              <Input
+                name="audiobook_price"
+                type="number"
+                step="1"
+                inputMode="numeric"
+                defaultValue={audiobook?.price || ""}
+              />
             </div>
             <div className="md:col-span-2 flex flex-wrap gap-4">
               {BADGE_FIELDS.map((field) => (

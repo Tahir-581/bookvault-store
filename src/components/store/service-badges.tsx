@@ -3,12 +3,6 @@ import type { BookWithFormats } from "@/lib/types";
 export function ServiceBadges({ book }: { book: BookWithFormats }) {
   const badges: { label: string; className: string }[] = [];
 
-  if (book.is_kindle_unlimited) {
-    badges.push({
-      label: "kindle unlimited",
-      className: "text-[10px] font-bold text-foreground",
-    });
-  }
   if (book.is_prime_eligible) {
     badges.push({
       label: "prime",

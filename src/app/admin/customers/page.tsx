@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { formatPrice } from "@/lib/utils";
 
 export default async function AdminCustomersPage() {
   const supabase = await createServiceClient();
@@ -31,7 +32,7 @@ export default async function AdminCustomersPage() {
             <tr key={c.email} className="border-b">
               <td className="p-3">{c.email}</td>
               <td className="p-3">{c.orders}</td>
-              <td className="p-3">£{c.total.toFixed(2)}</td>
+              <td className="p-3">{formatPrice(c.total)}</td>
             </tr>
           ))}
         </tbody>

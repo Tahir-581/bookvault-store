@@ -22,7 +22,11 @@ export function AdminCouponsManager({ coupons }: { coupons: Coupon[] }) {
 
   function handleCreate(formData: FormData) {
     startTransition(async () => {
-      await createCouponAction(formData);
+      const result = await createCouponAction(formData);
+      if (result && "error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
       toast.success("Coupon created");
     });
   }
@@ -50,7 +54,7 @@ export function AdminCouponsManager({ coupons }: { coupons: Coupon[] }) {
           </div>
           <div>
             <Label>Value</Label>
-            <Input name="discount_value" type="number" step="0.01" defaultValue="10" />
+            <Input name="discount_value" type="number" step="1" inputMode="numeric" defaultValue="10" />
           </div>
         </div>
         <Button type="submit" className="mt-4" disabled={pending}>Create Coupon</Button>

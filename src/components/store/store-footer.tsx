@@ -6,21 +6,14 @@ import type { FooterConfig } from "@/lib/types";
 export function StoreFooter({
   siteName,
   footer,
-  currency = "GBP",
-  locale = "en-GB",
 }: {
   siteName: string;
   footer?: FooterConfig;
-  currency?: string;
-  locale?: string;
 }) {
   const defaultColumns = [
     {
       title: "Get to Know Us",
-      links: [
-        { label: "About Us", href: "/pages/about" },
-        { label: "Careers", href: "/pages/careers" },
-      ],
+      links: [{ label: "About Us", href: "/pages/about" }],
     },
     {
       title: "Let Us Help You",
@@ -39,7 +32,6 @@ export function StoreFooter({
   const leftLinks = flatLinks.slice(0, mid);
   const rightLinks = flatLinks.slice(mid);
 
-  const subsidiaries = footer?.subsidiaries || [];
   const legalLinks = footer?.legalLinks || [
     { label: "Conditions of Use", href: "/pages/terms" },
     { label: "Privacy Notice", href: "/pages/privacy" },
@@ -48,10 +40,6 @@ export function StoreFooter({
   const copyright =
     footer?.copyright ||
     `© ${new Date().getFullYear()}, ${siteName} or its affiliates.`;
-
-  const currencyLabel =
-    currency === "GBP" ? "£ GBP - British Pound" : currency;
-  const regionLabel = locale === "en-GB" ? "United Kingdom" : locale;
 
   return (
     <footer className="mt-auto text-white">
@@ -87,15 +75,6 @@ export function StoreFooter({
           </ul>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm">
-          <span className="rounded border border-gray-500 px-3 py-1 text-gray-200">
-            {currencyLabel}
-          </span>
-          <span className="rounded border border-gray-500 px-3 py-1 text-gray-200">
-            {regionLabel}
-          </span>
-        </div>
-
         <p className="mt-6 text-center text-sm text-white">
           Already a customer?{" "}
           <Link href="/account" className="font-bold text-white underline">
@@ -106,7 +85,7 @@ export function StoreFooter({
 
       {/* Desktop: titled columns */}
       <div className="hidden bg-secondary md:block">
-        <div className="mx-auto grid max-w-[1500px] grid-cols-2 gap-8 px-4 py-10 md:grid-cols-4">
+        <div className="mx-auto grid max-w-[1500px] grid-cols-2 gap-8 px-4 py-10">
           {cols.map((col) => (
             <div key={col.title}>
               <h3 className="mb-3 font-bold text-white">{col.title}</h3>
@@ -122,40 +101,7 @@ export function StoreFooter({
             </div>
           ))}
         </div>
-
-        <div className="border-t border-gray-600 py-6">
-          <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-center gap-6 px-4">
-            <Link href="/" className="text-xl font-bold text-white hover:text-white">
-              {siteName}
-            </Link>
-            <div className="flex gap-3 text-sm">
-              <span className="rounded border border-gray-500 px-3 py-1 text-gray-300">
-                {currencyLabel}
-              </span>
-              <span className="rounded border border-gray-500 px-3 py-1 text-gray-300">
-                {regionLabel}
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
-
-      {subsidiaries.length > 0 && (
-        <div className="border-t border-gray-700 bg-secondary py-8">
-          <div className="mx-auto grid max-w-[1500px] grid-cols-2 gap-6 px-4 md:grid-cols-3 lg:grid-cols-6">
-            {subsidiaries.map((sub) => (
-              <Link
-                key={sub.href + sub.label}
-                href={sub.href}
-                className="text-center hover:underline"
-              >
-                <p className="text-sm font-medium text-white">{sub.label}</p>
-                <p className="text-xs text-gray-400">{sub.description}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="bg-footer-legal py-6 text-center text-xs text-gray-400">
         {legalLinks.length > 0 && (

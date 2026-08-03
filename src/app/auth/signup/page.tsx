@@ -43,7 +43,7 @@ export default function SignupPage() {
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating..." : "Create your BookVault account"}
+            {loading ? "Creating..." : "Create your Ilfaaz account"}
           </Button>
         </form>
         <p className="mt-4 text-center text-sm">

@@ -1,3 +1,5 @@
+import { formatPrice } from "@/lib/utils";
+
 export async function sendOrderConfirmationEmail(
   email: string,
   orderNumber: string,
@@ -14,12 +16,13 @@ export async function sendOrderConfirmationEmail(
       auth: { user: username, pass: password },
     });
 
+    const totalFormatted = formatPrice(total);
     await transporter.sendMail({
       from: username,
       to: email,
       subject: `Order Confirmed — ${orderNumber}`,
-      text: `Thank you for your order!\n\nOrder: ${orderNumber}\nTotal: £${total.toFixed(2)}\n\nWe'll send you another email when your order ships.`,
-      html: `<h2>Order Confirmed</h2><p>Order: <strong>${orderNumber}</strong></p><p>Total: <strong>£${total.toFixed(2)}</strong></p><p>We'll notify you when your order ships.</p>`,
+      text: `Thank you for your order!\n\nOrder: ${orderNumber}\nTotal: ${totalFormatted}\n\nWe'll send you another email when your order ships.`,
+      html: `<h2>Order Confirmed</h2><p>Order: <strong>${orderNumber}</strong></p><p>Total: <strong>${totalFormatted}</strong></p><p>We'll notify you when your order ships.</p>`,
     });
   } catch {
     // Email is optional — fail silently

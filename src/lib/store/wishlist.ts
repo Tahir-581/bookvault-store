@@ -41,6 +41,6 @@ export const useWishlistStore = create<WishlistState>()(
       hasItem: (bookId) => get().items.some((i) => i.bookId === bookId),
       clear: () => set({ items: [] }),
     }),
-    { name: "bookvault-wishlist" }
+    { name: "ilfaaz-wishlist" }
   )
 );

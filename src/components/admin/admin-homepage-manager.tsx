@@ -197,7 +197,6 @@ function SectionFields({ section }: { section?: HomepageSection }) {
         <Label>Format</Label>
         <select name="format" className="w-full rounded border px-3 py-2" defaultValue={config.format || ""}>
           <option value="">—</option>
-          <option value="ebook">ebook</option>
           <option value="print">print</option>
           <option value="paperback">paperback</option>
           <option value="hardcover">hardcover</option>

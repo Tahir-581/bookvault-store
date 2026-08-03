@@ -5,7 +5,6 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
 
 const DEFAULT_PILLS = [
-  { label: "Kindle eBooks", href: "/books?format=ebook" },
   { label: "Print Books", href: "/books?format=print" },
   { label: "Audible Audiobooks", href: "/books?format=audiobook" },
 ];

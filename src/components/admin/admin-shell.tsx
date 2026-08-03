@@ -32,7 +32,7 @@ export async function AdminSidebar() {
     <aside className="w-64 shrink-0 border-r border-border bg-secondary text-secondary-foreground">
       <div className="border-b border-gray-600 p-4">
         <Link href="/admin" className="text-lg font-bold">
-          BookVault Admin
+          Ilfaaz Admin
         </Link>
       </div>
       <nav className="p-2">

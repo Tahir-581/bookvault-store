@@ -16,7 +16,6 @@ export type SiteConfig = {
   reviewsEnabled: boolean;
   wishlistsEnabled: boolean;
   membershipEnabled: boolean;
-  ebooksEnabled: boolean;
 };
 
 export type Book = {
@@ -37,7 +36,6 @@ export type Book = {
   is_featured: boolean;
   is_bestseller: boolean;
   is_new_release: boolean;
-  is_kindle_unlimited?: boolean;
   is_prime_eligible?: boolean;
   is_first_reads?: boolean;
   is_audible_exclusive?: boolean;
@@ -116,7 +114,7 @@ export type NavMenuItem = {
 
 export type HomepageSectionConfig = {
   filter?: "bestseller" | "new_release" | "featured" | "deals";
-  format?: "ebook" | "paperback" | "hardcover" | "audiobook" | "print";
+  format?: "paperback" | "hardcover" | "audiobook" | "print";
   category?: string;
   limit?: number;
   see_more_href?: string;

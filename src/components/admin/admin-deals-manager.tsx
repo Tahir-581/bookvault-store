@@ -35,7 +35,11 @@ export function AdminDealsManager({
 
   function handleCreate(formData: FormData) {
     startTransition(async () => {
-      await createDealAction(formData);
+      const result = await createDealAction(formData);
+      if (result && "error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
       toast.success("Deal created");
       window.location.reload();
     });
@@ -88,8 +92,8 @@ export function AdminDealsManager({
             </select>
           </div>
           <div>
-            <Label>Deal price (£)</Label>
-            <Input name="deal_price" type="number" step="0.01" required />
+            <Label>Deal price (PKR)</Label>
+            <Input name="deal_price" type="number" step="1" inputMode="numeric" required />
           </div>
           <div>
             <Label>Starts</Label>

@@ -58,7 +58,7 @@ export function FilterSidebar({
       <div>
         <h3 className="mb-2 font-bold text-foreground">Format</h3>
         <div className="space-y-2 text-sm">
-          {["paperback", "hardcover", "ebook"].map((fmt) => (
+          {["paperback", "hardcover", "audiobook"].map((fmt) => (
             <label key={fmt} className="flex items-center gap-2 capitalize">
               <input
                 type="radio"
@@ -66,7 +66,7 @@ export function FilterSidebar({
                 checked={currentFilters.format === fmt}
                 onChange={() => updateFilter("format", fmt)}
               />
-              {fmt === "ebook" ? "Kindle eBook" : fmt}
+              {fmt === "audiobook" ? "Audible Audiobook" : fmt}
             </label>
           ))}
         </div>
@@ -99,11 +99,11 @@ export function FilterSidebar({
           }}
         >
           <div>
-            <Label className="text-xs">Min £</Label>
+            <Label className="text-xs">Min PKR</Label>
             <Input name="minPrice" type="number" defaultValue={currentFilters.minPrice} className="h-8" />
           </div>
           <div>
-            <Label className="text-xs">Max £</Label>
+            <Label className="text-xs">Max PKR</Label>
             <Input name="maxPrice" type="number" defaultValue={currentFilters.maxPrice} className="h-8" />
           </div>
           <Button type="submit" size="sm" className="mt-5">

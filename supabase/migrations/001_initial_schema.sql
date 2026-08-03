@@ -1,4 +1,4 @@
--- BookVault Store Schema
+-- Ilfaaz Store Schema
 
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
@@ -100,7 +100,7 @@ CREATE TRIGGER store_books_search_trigger
 CREATE TABLE IF NOT EXISTS store_book_formats (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   book_id uuid NOT NULL REFERENCES store_books(id) ON DELETE CASCADE,
-  format text NOT NULL CHECK (format IN ('paperback', 'hardcover', 'ebook')),
+  format text NOT NULL CHECK (format IN ('paperback', 'hardcover', 'audiobook')),
   price numeric(10,2) NOT NULL,
   compare_at_price numeric(10,2),
   stock int NOT NULL DEFAULT 0,
@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS store_orders (
   shipping_fee numeric(10,2) NOT NULL DEFAULT 0,
   tax numeric(10,2) NOT NULL DEFAULT 0,
   grand_total numeric(10,2) NOT NULL DEFAULT 0,
-  currency text NOT NULL DEFAULT 'GBP',
+  currency text NOT NULL DEFAULT 'PKR',
   coupon_code text,
   shipping_address jsonb NOT NULL DEFAULT '{}',
   gift_message text,
@@ -440,9 +440,9 @@ CREATE POLICY "Public read active coupons" ON store_coupons FOR SELECT USING (is
 
 -- Seed default settings
 INSERT INTO store_settings (key, value) VALUES
-  ('site', '{"name":"BookVault","tagline":"Your favourite books, delivered fast","currency":"GBP","locale":"en-GB","primaryColor":"#B8863E","secondaryColor":"#4A1C2E","membershipName":"BookPass","freeShippingThreshold":25,"taxRate":0.20,"standardShipping":3.99,"expressShipping":7.99,"guestCheckout":true,"reviewsEnabled":true,"wishlistsEnabled":true,"membershipEnabled":true,"ebooksEnabled":true}'::jsonb),
-  ('announcement', '{"text":"Free delivery on orders over £25","isActive":true}'::jsonb),
-  ('footer', '{"columns":[{"title":"Get to Know Us","links":[{"label":"About BookVault","href":"/pages/about"},{"label":"Careers","href":"/pages/careers"}]},{"title":"Let Us Help You","links":[{"label":"Help","href":"/pages/help"},{"label":"Returns","href":"/pages/returns"}]},{"title":"Payment","links":[{"label":"Payment Methods","href":"/pages/payment"}]}]}'::jsonb)
+  ('site', '{"name":"Ilfaaz","tagline":"Your favourite books, delivered fast","currency":"PKR","locale":"en-PK","primaryColor":"#B8863E","secondaryColor":"#4A1C2E","membershipName":"BookPass","freeShippingThreshold":25,"taxRate":0.20,"standardShipping":4,"expressShipping":8,"guestCheckout":true,"reviewsEnabled":true,"wishlistsEnabled":true,"membershipEnabled":true}'::jsonb),
+  ('announcement', '{"text":"Free delivery on orders over Rs 25","isActive":true}'::jsonb),
+  ('footer', '{"columns":[{"title":"Get to Know Us","links":[{"label":"About Ilfaaz","href":"/pages/about"},{"label":"Careers","href":"/pages/careers"}]},{"title":"Let Us Help You","links":[{"label":"Help","href":"/pages/help"},{"label":"Returns","href":"/pages/returns"}]},{"title":"Payment","links":[{"label":"Payment Methods","href":"/pages/payment"}]}]}'::jsonb)
 ON CONFLICT (key) DO NOTHING;
 
 INSERT INTO store_memberships (name, description, price_monthly, benefits, free_shipping_threshold) VALUES
@@ -452,7 +452,6 @@ ON CONFLICT DO NOTHING;
 INSERT INTO store_navigation_menus (menu_key, label, items) VALUES
   ('secondary', 'Secondary Nav', '[
     {"label":"Books","href":"/books"},
-    {"label":"eBooks","href":"/books?format=ebook"},
     {"label":"Categories","href":"/categories"},
     {"label":"Deals","href":"/deals"},
     {"label":"Best Sellers","href":"/books?sort=bestseller"},

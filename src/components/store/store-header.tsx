@@ -101,7 +101,7 @@ export function StoreHeader({
           {/* Mobile deliver-to strip */}
           <div className="flex items-center gap-1 bg-[#232f3e] px-3 py-1.5 text-xs text-gray-200 sm:hidden">
             <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span>Deliver to United Kingdom</span>
+            <span>Deliver to Pakistan</span>
           </div>
 
           {/* Desktop / tablet header */}
@@ -129,7 +129,7 @@ export function StoreHeader({
               <MapPin className="h-4 w-4" />
               <div className="text-left">
                 <div className="text-gray-300">Deliver to</div>
-                <div className="font-bold">United Kingdom</div>
+                <div className="font-bold">Pakistan</div>
               </div>
             </button>
 

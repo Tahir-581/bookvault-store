@@ -24,7 +24,7 @@ function slugify(text: string) {
 }
 
 async function seed() {
-  console.log("Seeding BookVault store...");
+  console.log("Seeding Ilfaaz store...");
 
   const categoryMap = new Map<string, string>();
   for (const cat of CATEGORIES) {
@@ -59,14 +59,13 @@ async function seed() {
         is_bestseller: book.bestseller || false,
         is_new_release: book.newRelease || false,
         is_featured: book.featured || book.bestseller || false,
-        is_kindle_unlimited: book.kindleUnlimited || false,
         is_prime_eligible: book.prime || false,
         is_first_reads: book.firstReads || false,
         is_audible_exclusive: book.audibleExclusive || false,
         avg_rating: 3.5 + Math.random() * 1.5,
         review_count: Math.floor(Math.random() * 5000) + 100,
         is_active: true,
-        publisher: "BookVault Publishing",
+        publisher: "Ilfaaz Publishing",
         page_count: 250 + Math.floor(Math.random() * 300),
         language: "English",
       })
@@ -81,7 +80,6 @@ async function seed() {
     await supabase.from("store_book_formats").insert([
       { book_id: inserted.id, format: "paperback", price: book.price, compare_at_price: book.price * 1.2, stock: 100 },
       { book_id: inserted.id, format: "hardcover", price: book.price + 8, compare_at_price: (book.price + 8) * 1.15, stock: 50 },
-      { book_id: inserted.id, format: "ebook", price: book.price - 2, stock: 999 },
       ...(book.audiobook
         ? [{ book_id: inserted.id, format: "audiobook", price: book.price + 4, compare_at_price: (book.price + 4) * 1.1, stock: 999 }]
         : []),
@@ -138,12 +136,12 @@ async function seed() {
 
   // Badge enrichment on existing books
   const badgeUpdates = [
-    { match: "Midnight Library", kindle: true, prime: true },
+    { match: "Midnight Library", prime: true },
     { match: "Atomic Habits", prime: true },
-    { match: "Project Hail Mary", kindle: true, prime: true },
+    { match: "Project Hail Mary", prime: true },
     { match: "Harry Potter", prime: true, audible: true },
     { match: "Silent Patient", firstReads: true },
-    { match: "Day Break", kindle: true, prime: true },
+    { match: "Day Break", prime: true },
     { match: "Seed", firstReads: true, featured: true },
   ];
   for (const u of badgeUpdates) {
@@ -153,7 +151,6 @@ async function seed() {
       .ilike("title", `%${u.match}%`);
     for (const m of matches || []) {
       const patch: Record<string, boolean> = {};
-      if (u.kindle) patch.is_kindle_unlimited = true;
       if (u.prime) patch.is_prime_eligible = true;
       if (u.firstReads) patch.is_first_reads = true;
       if (u.audible) patch.is_audible_exclusive = true;
@@ -214,8 +211,8 @@ async function seed() {
 
   await supabase.from("store_content_pages").upsert(
     [
-      { slug: "about", title: "About BookVault", body: "BookVault is your destination for millions of books, delivered fast across the United Kingdom.", is_published: true },
-      { slug: "help", title: "Help Centre", body: "Need assistance? Contact our support team at help@bookvault.co.uk", is_published: true },
+      { slug: "about", title: "About Ilfaaz", body: "Ilfaaz is your destination for millions of books, delivered fast across the United Kingdom.", is_published: true },
+      { slug: "help", title: "Help Centre", body: "Need assistance? Contact our support team at help@ilfaaz.com", is_published: true },
       { slug: "returns", title: "Returns Policy", body: "You can return most items within 30 days of receipt for a full refund.", is_published: true },
     ],
     { onConflict: "slug" }
@@ -231,7 +228,6 @@ async function seed() {
       subtitle: null,
       config: {
         pills: [
-          { label: "Kindle eBooks", href: "/books?format=ebook" },
           { label: "Print Books", href: "/books?format=print" },
           { label: "Audible Audiobooks", href: "/books?format=audiobook" },
         ],
@@ -240,66 +236,52 @@ async function seed() {
     },
     {
       section_type: "book_row",
-      title: "Best Sellers on Kindle",
-      subtitle: null,
-      config: { filter: "bestseller", format: "ebook", limit: 12, see_more_href: "/books?format=ebook&sort=bestseller" },
-      sort_order: 2,
-    },
-    {
-      section_type: "book_row",
       title: "Best sellers in print",
       subtitle: null,
       config: { filter: "bestseller", format: "print", limit: 12, see_more_href: "/books?format=print&sort=bestseller" },
-      sort_order: 3,
+      sort_order: 2,
     },
     {
       section_type: "book_row",
       title: "New releases in print",
       subtitle: null,
       config: { filter: "new_release", format: "print", limit: 12, see_more_href: "/books?format=print&sort=newest" },
-      sort_order: 4,
-    },
-    {
-      section_type: "book_row",
-      title: "New releases on Kindle",
-      subtitle: null,
-      config: { filter: "new_release", format: "ebook", limit: 12, see_more_href: "/books?format=ebook&sort=newest" },
-      sort_order: 5,
+      sort_order: 3,
     },
     {
       section_type: "carousel",
       title: "Today's Deals",
       subtitle: "Limited-time savings",
       config: { source: "deals", limit: 12, see_more_href: "/deals" },
-      sort_order: 6,
+      sort_order: 4,
     },
     {
       section_type: "book_row",
       title: "Best sellers in Original books",
       subtitle: null,
       config: { filter: "featured", limit: 12, see_more_href: "/books?sort=bestseller" },
-      sort_order: 7,
+      sort_order: 5,
     },
     {
       section_type: "book_row",
       title: "Best sellers on Audible",
       subtitle: null,
       config: { filter: "bestseller", format: "audiobook", limit: 12, see_more_href: "/books?format=audiobook&sort=bestseller" },
-      sort_order: 8,
+      sort_order: 6,
     },
     {
       section_type: "book_row",
       title: "Most popular listens",
       subtitle: null,
       config: { format: "audiobook", limit: 12, see_more_href: "/books?format=audiobook" },
-      sort_order: 9,
+      sort_order: 7,
     },
     {
       section_type: "editorial",
-      title: "Why BookVault?",
+      title: "Why Ilfaaz?",
       subtitle: "Millions of titles, fast delivery, easy returns",
       config: { cta: { label: "Browse all books", href: "/books" } },
-      sort_order: 10,
+      sort_order: 8,
     },
   ];
 

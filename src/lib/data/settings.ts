@@ -19,7 +19,7 @@ export async function getSiteConfig(): Promise<SiteConfig> {
 
 export async function getAnnouncement() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    return { text: "Free delivery on orders over £25", isActive: true };
+    return { text: "Free delivery on orders over Rs 25", isActive: true };
   }
   try {
     const supabase = await createClient();
@@ -54,7 +54,6 @@ export async function getFooterConfig() {
 
 export async function getBooksSubNav() {
   const defaults: NavMenuItem[] = [
-    { label: "Kindle eBooks", href: "/books?format=ebook" },
     { label: "Deals", href: "/deals" },
     {
       label: "By Category",
