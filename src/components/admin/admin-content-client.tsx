@@ -37,7 +37,7 @@ export function AdminContentPageClient({
         <ul className="rounded bg-white shadow-sm">
           {pages.map((page) => (
             <li key={page.id} className="border-b px-4 py-3 last:border-0">
-              <a href={`/pages/${page.slug}`} className="font-medium text-[#007185] hover:text-[#C7511F]">
+              <a href={`/pages/${page.slug}`} className="font-medium text-link hover:text-link-hover">
                 {page.title}
               </a>
               <span className="ml-2 text-sm text-gray-500">/pages/{page.slug}</span>

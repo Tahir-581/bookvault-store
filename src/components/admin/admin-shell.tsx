@@ -29,7 +29,7 @@ const links = [
 
 export async function AdminSidebar() {
   return (
-    <aside className="w-64 shrink-0 border-r border-gray-200 bg-[#232F3E] text-white">
+    <aside className="w-64 shrink-0 border-r border-border bg-secondary text-secondary-foreground">
       <div className="border-b border-gray-600 p-4">
         <Link href="/admin" className="text-lg font-bold">
           BookVault Admin
@@ -40,7 +40,7 @@ export async function AdminSidebar() {
           <Link
             key={href}
             href={href}
-            className="flex items-center gap-3 rounded px-3 py-2 text-sm hover:bg-[#37475A]"
+            className="flex items-center gap-3 rounded px-3 py-2 text-sm hover:bg-nav-hover"
           >
             <Icon className="h-4 w-4" />
             {label}

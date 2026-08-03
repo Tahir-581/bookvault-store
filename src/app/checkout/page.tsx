@@ -100,7 +100,7 @@ export default function CheckoutPage() {
         {["Shipping", "Delivery", "Payment"].map((label, i) => (
           <span
             key={label}
-            className={step >= i + 1 ? "font-bold text-[#C7511F]" : "text-gray-500"}
+            className={step >= i + 1 ? "font-bold text-link-hover" : "text-gray-500"}
           >
             {i + 1}. {label}
           </span>

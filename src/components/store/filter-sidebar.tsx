@@ -28,12 +28,12 @@ export function FilterSidebar({
   return (
     <aside className="w-full shrink-0 space-y-6 lg:w-56">
       <div>
-        <h3 className="mb-2 font-bold text-[#0F1111]">Department</h3>
+        <h3 className="mb-2 font-bold text-foreground">Department</h3>
         <ul className="space-y-1 text-sm">
           <li>
             <button
               onClick={() => updateFilter("category", null)}
-              className="text-[#007185] hover:text-[#C7511F] hover:underline"
+              className="text-link hover:text-link-hover hover:underline"
             >
               All Books
             </button>
@@ -42,10 +42,10 @@ export function FilterSidebar({
             <li key={cat.id}>
               <button
                 onClick={() => updateFilter("category", cat.slug)}
-                className={`hover:text-[#C7511F] hover:underline ${
+                className={`hover:text-link-hover hover:underline ${
                   currentFilters.category === cat.slug
-                    ? "font-bold text-[#C7511F]"
-                    : "text-[#007185]"
+                    ? "font-bold text-link-hover"
+                    : "text-link"
                 }`}
               >
                 {cat.name}
@@ -56,7 +56,7 @@ export function FilterSidebar({
       </div>
 
       <div>
-        <h3 className="mb-2 font-bold text-[#0F1111]">Format</h3>
+        <h3 className="mb-2 font-bold text-foreground">Format</h3>
         <div className="space-y-2 text-sm">
           {["paperback", "hardcover", "ebook"].map((fmt) => (
             <label key={fmt} className="flex items-center gap-2 capitalize">
@@ -73,13 +73,13 @@ export function FilterSidebar({
       </div>
 
       <div>
-        <h3 className="mb-2 font-bold text-[#0F1111]">Avg. Customer Review</h3>
+        <h3 className="mb-2 font-bold text-foreground">Avg. Customer Review</h3>
         <div className="space-y-2 text-sm">
           {[4, 3, 2, 1].map((r) => (
             <button
               key={r}
               onClick={() => updateFilter("minRating", String(r))}
-              className="block text-[#007185] hover:text-[#C7511F] hover:underline"
+              className="block text-link hover:text-link-hover hover:underline"
             >
               {r} Stars & Up
             </button>
@@ -88,7 +88,7 @@ export function FilterSidebar({
       </div>
 
       <div>
-        <h3 className="mb-2 font-bold text-[#0F1111]">Price</h3>
+        <h3 className="mb-2 font-bold text-foreground">Price</h3>
         <form
           className="flex gap-2"
           onSubmit={(e) => {

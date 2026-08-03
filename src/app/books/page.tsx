@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { BooksMobileFilters, BooksSortSelect } from "@/components/store/books-mobile-filters";
+import { BooksSubNav } from "@/components/store/books-sub-nav";
 import { FilterSidebar } from "@/components/store/filter-sidebar";
 import { ProductCard } from "@/components/store/product-card";
 import { getBooks, getCategories } from "@/lib/data/books";
+import { getBooksSubNav } from "@/lib/data/settings";
 
 export default async function BooksPage({
   searchParams,
@@ -10,8 +13,9 @@ export default async function BooksPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
-  const [categories, { books, total, page, pageSize }] = await Promise.all([
+  const [categories, booksSubNav, { books, total, page, pageSize }] = await Promise.all([
     getCategories(),
+    getBooksSubNav(),
     getBooks({
       q: params.q,
       category: params.category,
@@ -25,66 +29,85 @@ export default async function BooksPage({
   ]);
 
   const totalPages = Math.ceil(total / pageSize);
+  const preferredFormat = params.format;
 
   return (
-    <div className="mx-auto max-w-[1500px] px-4 py-4">
-      <div className="mb-4 text-sm text-gray-600">
-        <Link href="/">Home</Link> › Books
-        {params.q && <> › Results for &quot;{params.q}&quot;</>}
-      </div>
+    <>
+      <BooksSubNav items={booksSubNav} deptLabel="books" />
+      <div className="mx-auto max-w-[1500px] px-3 py-3 sm:px-4">
+        <div className="mb-3 hidden text-sm text-muted-foreground lg:block">
+          <Link href="/" className="text-link hover:underline">
+            Home
+          </Link>{" "}
+          › Books
+          {params.q && <> › Results for &quot;{params.q}&quot;</>}
+        </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-        <Suspense>
-          <FilterSidebar categories={categories} currentFilters={params} />
+        <Suspense fallback={null}>
+          <BooksMobileFilters categories={categories} currentFilters={params} />
         </Suspense>
 
-        <div className="flex-1">
-          <div className="mb-4 flex items-center justify-between rounded bg-white p-4 shadow-sm">
-            <p className="text-sm text-gray-600">
-              {total} result{total !== 1 ? "s" : ""}
-            </p>
-            <select
-              defaultValue={params.sort || ""}
-              className="rounded border border-gray-300 px-3 py-1 text-sm"
-            >
-              <option value="">Featured</option>
-              <option value="bestseller">Best Sellers</option>
-              <option value="newest">Newest Arrivals</option>
-              <option value="rating">Avg. Customer Review</option>
-            </select>
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="hidden lg:block">
+            <Suspense fallback={null}>
+              <FilterSidebar categories={categories} currentFilters={params} />
+            </Suspense>
           </div>
 
-          {books.length === 0 ? (
-            <div className="rounded bg-white p-12 text-center shadow-sm">
-              <p className="text-lg text-gray-600">No books found. Try adjusting your filters.</p>
+          <div className="flex-1 min-w-0">
+            <div className="mb-3 hidden items-center justify-between rounded border border-border bg-card p-3 lg:flex">
+              <p className="text-sm text-muted-foreground">
+                {total} result{total !== 1 ? "s" : ""}
+              </p>
+              <Suspense fallback={null}>
+                <BooksSortSelect currentSort={params.sort} />
+              </Suspense>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-              {books.map((book) => (
-                <ProductCard key={book.id} book={book} />
-              ))}
-            </div>
-          )}
 
-          {totalPages > 1 && (
-            <div className="mt-6 flex justify-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Link
-                  key={p}
-                  href={`?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
-                  className={`rounded px-3 py-1 text-sm ${
-                    p === page
-                      ? "bg-[#FF9900] font-bold text-black"
-                      : "bg-white text-[#007185] hover:bg-gray-100"
-                  }`}
-                >
-                  {p}
-                </Link>
-              ))}
-            </div>
-          )}
+            <p className="mb-2 text-sm text-muted-foreground lg:hidden">
+              {total} result{total !== 1 ? "s" : ""}
+            </p>
+
+            {books.length === 0 ? (
+              <div className="rounded border border-border bg-card p-12 text-center">
+                <p className="text-lg text-muted-foreground">
+                  No books found. Try adjusting your filters.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
+                {books.map((book) => (
+                  <ProductCard
+                    key={book.id}
+                    book={book}
+                    variant="storefront"
+                    preferredFormat={preferredFormat}
+                    className="!w-full"
+                  />
+                ))}
+              </div>
+            )}
+
+            {totalPages > 1 && (
+              <div className="mt-6 flex justify-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <Link
+                    key={p}
+                    href={`?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
+                    className={`rounded px-3 py-1 text-sm ${
+                      p === page
+                        ? "bg-secondary font-bold text-secondary-foreground"
+                        : "bg-card text-link hover:bg-muted"
+                    }`}
+                  >
+                    {p}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

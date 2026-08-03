@@ -37,7 +37,7 @@ export default async function OrdersPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-medium">{formatPrice(order.grand_total)}</p>
-                  <p className="text-sm capitalize text-[#007600]">
+                  <p className="text-sm capitalize text-success">
                     {ORDER_STATUS_LABELS[order.status as keyof typeof ORDER_STATUS_LABELS] || order.status}
                   </p>
                 </div>

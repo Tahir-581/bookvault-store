@@ -30,7 +30,7 @@ export default async function ConfirmationPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <div className="rounded-lg bg-white p-8 text-center shadow-sm">
-        <CheckCircle className="mx-auto h-16 w-16 text-[#007600]" />
+        <CheckCircle className="mx-auto h-16 w-16 text-success" />
         <h1 className="mt-4 text-2xl font-bold">Order Placed!</h1>
         <p className="mt-2 text-gray-600">
           Thank you. Your order <strong>{orderNumber}</strong> has been confirmed.
@@ -57,7 +57,7 @@ export default async function ConfirmationPage({
           <div className="space-y-3">
             {order.store_order_events.map((event) => (
               <div key={event.id} className="flex gap-3 text-sm">
-                <div className="h-2 w-2 mt-1.5 rounded-full bg-[#FF9900]" />
+                <div className="h-2 w-2 mt-1.5 rounded-full bg-accent" />
                 <div>
                   <p className="font-medium capitalize">{event.status}</p>
                   <p className="text-gray-500">{event.note}</p>

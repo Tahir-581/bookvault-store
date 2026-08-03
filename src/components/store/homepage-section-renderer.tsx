@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Suspense } from "react";
 import { ProductCard } from "@/components/store/product-card";
 import { ProductShelf } from "@/components/store/product-shelf";
@@ -56,48 +55,40 @@ async function SectionBlock({
       return (
         <Suspense fallback={null}>
           <FormatFilterPills
-            title={section.title || "Filter by"}
             pills={config.pills || DEFAULT_PILLS}
+            showClear
           />
         </Suspense>
       );
 
     case "category_tiles":
       return (
-        <section className="mb-8 rounded-lg bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-bold text-[#0F1111]">
-            {section.title || "Shop by Category"}
+        <section className="mb-8">
+          <h2 className="mb-2 text-xl font-bold text-foreground">
+            {section.title || "Explore categories"}
           </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6">
-            {categories.slice(0, 6).map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/books/${cat.slug}`}
-                className="rounded border border-gray-200 p-4 text-center hover:shadow-md"
-              >
-                {cat.image_url ? (
-                  <div className="relative mx-auto mb-2 h-16 w-16">
-                    <Image
-                      src={cat.image_url}
-                      alt={cat.name}
-                      fill
-                      className="object-cover rounded"
-                    />
-                  </div>
-                ) : (
-                  <div className="mb-2 text-3xl">📚</div>
-                )}
-                <span className="text-sm font-medium text-[#0F1111]">{cat.name}</span>
-              </Link>
+          <ul className="divide-y divide-border border-y border-border">
+            {categories.map((cat) => (
+              <li key={cat.id}>
+                <Link
+                  href={`/books?category=${cat.slug}`}
+                  className="flex items-center justify-between px-1 py-3.5 text-base text-link hover:underline"
+                >
+                  {cat.name}
+                  <span className="text-link" aria-hidden>
+                    ›
+                  </span>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       );
 
     case "editorial":
       const cta = config.cta;
       return (
-        <section className="mb-8 rounded-lg bg-[#232F3E] p-8 text-center text-white">
+        <section className="mb-8 rounded-lg bg-secondary p-8 text-center text-secondary-foreground">
           <h2 className="text-2xl font-bold">{section.title || "Why BookVault?"}</h2>
           {section.subtitle && (
             <p className="mt-2 text-gray-300">{section.subtitle}</p>
@@ -105,7 +96,7 @@ async function SectionBlock({
           {cta && (
             <Link
               href={cta.href}
-              className="mt-4 inline-block rounded bg-[#FF9900] px-6 py-2 font-medium text-black hover:bg-[#F08804]"
+              className="mt-4 inline-block rounded bg-accent px-6 py-2 font-medium text-accent-foreground hover:bg-accent-hover"
             >
               {cta.label}
             </Link>
@@ -113,7 +104,7 @@ async function SectionBlock({
           {membershipName && !cta && (
             <Link
               href="/account/membership"
-              className="mt-4 inline-block rounded bg-[#FF9900] px-6 py-2 font-medium text-black hover:bg-[#F08804]"
+              className="mt-4 inline-block rounded bg-accent px-6 py-2 font-medium text-accent-foreground hover:bg-accent-hover"
             >
               Try {membershipName} free for 30 days
             </Link>

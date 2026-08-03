@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { X } from "lucide-react";
 
 const DEFAULT_PILLS = [
   { label: "Kindle eBooks", href: "/books?format=ebook" },
@@ -10,35 +11,47 @@ const DEFAULT_PILLS = [
 ];
 
 export function FormatFilterPills({
-  title = "Filter by",
+  title,
   pills = DEFAULT_PILLS,
+  showClear = false,
 }: {
   title?: string;
   pills?: { label: string; href: string }[];
+  showClear?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentFormat = searchParams.get("format");
+  const hasActive = Boolean(currentFormat);
 
   return (
-    <section className="mb-6 py-2">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm font-bold text-[#0F1111]">{title}</span>
+    <section className="mb-4 py-1">
+      <div className="flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {title && (
+          <span className="shrink-0 text-sm font-bold text-foreground">{title}</span>
+        )}
+        {showClear && hasActive && (
+          <Link
+            href={pathname.startsWith("/books") ? "/books" : pathname}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-foreground hover:bg-muted"
+            aria-label="Clear filters"
+          >
+            <X className="h-4 w-4" />
+          </Link>
+        )}
         {pills.map((pill) => {
           const pillFormat = new URL(pill.href, "http://localhost").searchParams.get("format");
           const isActive =
-            pathname === "/" && !currentFormat && pill.label === "Kindle eBooks"
-              ? false
-              : currentFormat === pillFormat ||
-                (pill.href.includes("format=print") && currentFormat === "print");
+            currentFormat === pillFormat ||
+            (pill.href.includes("format=print") && currentFormat === "print");
           return (
             <Link
               key={pill.href}
               href={pill.href}
-              className={`rounded-full border px-4 py-1.5 text-sm transition ${
+              className={`shrink-0 rounded-md border px-3 py-1.5 text-sm transition ${
                 isActive
-                  ? "border-[#007185] bg-[#007185] text-white"
-                  : "border-gray-300 bg-white text-[#0F1111] hover:border-gray-400"
+                  ? "border-2 border-foreground font-bold text-foreground"
+                  : "border-border bg-card text-foreground hover:border-muted-foreground"
               }`}
             >
               {pill.label}

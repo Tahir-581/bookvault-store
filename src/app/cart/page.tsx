@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { CoverImage } from "@/components/store/cover-image";
 import { Button } from "@/components/ui/button";
 import { FORMAT_LABELS } from "@/lib/constants";
 import { useCartStore } from "@/lib/store/cart";
@@ -43,21 +43,21 @@ export default function CartPage() {
                 className="flex gap-4 border-b border-gray-100 py-4 last:border-0"
               >
                 <div className="relative h-32 w-24 shrink-0 bg-gray-50">
-                  <Image
+                  <CoverImage
                     src={item.coverUrl}
                     alt={item.title}
-                    fill
+                    sizes="96px"
                     className="object-contain p-1"
                   />
                 </div>
                 <div className="flex-1">
                   <Link
                     href={`/dp/${item.title.toLowerCase().replace(/\s+/g, "-")}`}
-                    className="font-medium text-[#007185] hover:text-[#C7511F]"
+                    className="font-medium text-link hover:text-link-hover"
                   >
                     {item.title}
                   </Link>
-                  <p className="text-sm text-[#007600]">In Stock</p>
+                  <p className="text-sm text-success">In Stock</p>
                   <p className="text-xs text-gray-500">
                     {FORMAT_LABELS[item.format]}
                   </p>
@@ -80,7 +80,7 @@ export default function CartPage() {
                     </div>
                     <button
                       onClick={() => removeItem(item.id)}
-                      className="flex items-center gap-1 text-sm text-[#007185] hover:text-[#C7511F]"
+                      className="flex items-center gap-1 text-sm text-link hover:text-link-hover"
                     >
                       <Trash2 className="h-4 w-4" />
                       Delete

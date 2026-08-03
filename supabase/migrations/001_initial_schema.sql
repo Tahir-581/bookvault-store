@@ -440,7 +440,7 @@ CREATE POLICY "Public read active coupons" ON store_coupons FOR SELECT USING (is
 
 -- Seed default settings
 INSERT INTO store_settings (key, value) VALUES
-  ('site', '{"name":"BookVault","tagline":"Your favourite books, delivered fast","currency":"GBP","locale":"en-GB","primaryColor":"#FF9900","secondaryColor":"#232F3E","membershipName":"BookPass","freeShippingThreshold":25,"taxRate":0.20,"standardShipping":3.99,"expressShipping":7.99,"guestCheckout":true,"reviewsEnabled":true,"wishlistsEnabled":true,"membershipEnabled":true,"ebooksEnabled":true}'::jsonb),
+  ('site', '{"name":"BookVault","tagline":"Your favourite books, delivered fast","currency":"GBP","locale":"en-GB","primaryColor":"#B8863E","secondaryColor":"#4A1C2E","membershipName":"BookPass","freeShippingThreshold":25,"taxRate":0.20,"standardShipping":3.99,"expressShipping":7.99,"guestCheckout":true,"reviewsEnabled":true,"wishlistsEnabled":true,"membershipEnabled":true,"ebooksEnabled":true}'::jsonb),
   ('announcement', '{"text":"Free delivery on orders over £25","isActive":true}'::jsonb),
   ('footer', '{"columns":[{"title":"Get to Know Us","links":[{"label":"About BookVault","href":"/pages/about"},{"label":"Careers","href":"/pages/careers"}]},{"title":"Let Us Help You","links":[{"label":"Help","href":"/pages/help"},{"label":"Returns","href":"/pages/returns"}]},{"title":"Payment","links":[{"label":"Payment Methods","href":"/pages/payment"}]}]}'::jsonb)
 ON CONFLICT (key) DO NOTHING;

@@ -55,20 +55,23 @@ export async function getFooterConfig() {
 export async function getBooksSubNav() {
   const defaults: NavMenuItem[] = [
     { label: "Kindle eBooks", href: "/books?format=ebook" },
+    { label: "Deals", href: "/deals" },
     {
-      label: "Categories",
+      label: "By Category",
       href: "/categories",
       children: [
-        { label: "Fiction", href: "/books/fiction" },
-        { label: "Non-Fiction", href: "/books/non-fiction" },
-        { label: "Mystery", href: "/books/mystery" },
+        { label: "Fiction", href: "/books?category=fiction" },
+        { label: "Non-Fiction", href: "/books?category=non-fiction" },
+        { label: "Mystery", href: "/books?category=mystery" },
+        { label: "Biography", href: "/books?category=biography" },
+        { label: "Children's Books", href: "/books?category=childrens" },
+        { label: "History", href: "/books?category=history" },
+        { label: "Romance", href: "/books?category=romance" },
+        { label: "Young Adult", href: "/books?category=young-adult" },
       ],
     },
-    { label: "New & Trending", href: "/books?sort=newest" },
-    { label: "Deals", href: "/deals" },
-    { label: "Best Sellers & More", href: "/books?sort=bestseller" },
-    { label: "Memberships", href: "/account/membership" },
-    { label: "More", href: "/books" },
+    { label: "Best Sellers", href: "/books?sort=bestseller" },
+    { label: "New Releases", href: "/books?sort=newest" },
   ];
   return getNavMenu("books_subnav", defaults);
 }

@@ -102,7 +102,7 @@ export function AdminHomepageManager({ sections }: { sections: HomepageSection[]
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-bold">Homepage Sections</h2>
-        <a href="/" target="_blank" className="text-sm text-[#007185] hover:underline">
+        <a href="/" target="_blank" className="text-sm text-link hover:underline">
           Preview home →
         </a>
       </div>

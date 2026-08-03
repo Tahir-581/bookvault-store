@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Heart, Trash2 } from "lucide-react";
+import { CoverImage } from "@/components/store/cover-image";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { Button } from "@/components/ui/button";
 
@@ -23,10 +23,15 @@ export default function WishlistPage() {
           {items.map((item) => (
             <div key={item.bookId} className="flex gap-4 rounded-lg bg-white p-4 shadow-sm">
               <div className="relative h-24 w-16 bg-gray-50">
-                <Image src={item.coverUrl} alt={item.title} fill className="object-contain" />
+                <CoverImage
+                  src={item.coverUrl}
+                  alt={item.title}
+                  sizes="64px"
+                  className="object-contain"
+                />
               </div>
               <div className="flex-1">
-                <Link href={`/dp/${item.title.toLowerCase().replace(/\s+/g, "-")}`} className="font-medium hover:text-[#C7511F]">
+                <Link href={`/dp/${item.title.toLowerCase().replace(/\s+/g, "-")}`} className="font-medium text-link hover:text-link-hover">
                   {item.title}
                 </Link>
                 <p className="text-sm text-gray-500">{item.author}</p>

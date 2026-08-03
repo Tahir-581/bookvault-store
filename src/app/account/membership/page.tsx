@@ -24,11 +24,11 @@ export default async function MembershipPage() {
         <ul className="mt-4 space-y-2">
           {benefits.map((b) => (
             <li key={b} className="flex items-center gap-2 text-sm">
-              <span className="text-[#FF9900]">✓</span> {b}
+              <span className="text-accent">✓</span> {b}
             </li>
           ))}
         </ul>
-        <button className="mt-6 w-full rounded bg-[#FF9900] py-3 font-medium text-black hover:bg-[#F08804]">
+        <button className="mt-6 w-full rounded bg-accent py-3 font-medium text-accent-foreground hover:bg-accent-hover">
           Start your 30-day free trial
         </button>
       </div>

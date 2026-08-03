@@ -1,27 +1,33 @@
 import Link from "next/link";
+import { BooksSubNav } from "@/components/store/books-sub-nav";
 import { getCategories } from "@/lib/data/books";
+import { getBooksSubNav } from "@/lib/data/settings";
 
 export default async function CategoriesPage() {
-  const categories = await getCategories();
+  const [categories, booksSubNav] = await Promise.all([
+    getCategories(),
+    getBooksSubNav(),
+  ]);
 
   return (
-    <div className="mx-auto max-w-[1500px] px-4 py-4">
-      <h1 className="mb-6 text-2xl font-bold">Browse Categories</h1>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {categories.map((cat) => (
-          <Link
-            key={cat.id}
-            href={`/books/${cat.slug}`}
-            className="rounded-lg bg-white p-6 text-center shadow-sm hover:shadow-md"
-          >
-            <div className="mb-3 text-4xl">📚</div>
-            <h2 className="font-medium">{cat.name}</h2>
-            {cat.description && (
-              <p className="mt-1 text-sm text-gray-500">{cat.description}</p>
-            )}
-          </Link>
-        ))}
+    <>
+      <BooksSubNav items={booksSubNav} deptLabel="books" />
+      <div className="mx-auto max-w-[1500px] px-3 py-4 sm:px-4">
+        <h1 className="mb-3 text-xl font-bold text-foreground">Explore categories</h1>
+        <ul className="divide-y divide-border border-y border-border">
+          {categories.map((cat) => (
+            <li key={cat.id}>
+              <Link
+                href={`/books?category=${cat.slug}`}
+                className="flex items-center justify-between py-3.5 text-base text-link hover:underline"
+              >
+                {cat.name}
+                <span aria-hidden>›</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
-    </div>
+    </>
   );
 }

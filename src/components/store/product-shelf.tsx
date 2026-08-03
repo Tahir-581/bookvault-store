@@ -23,22 +23,12 @@ export function ProductShelf({
   }
 
   return (
-    <section className="mb-6 bg-white">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-xl font-bold text-[#0F1111]">{title}</h2>
-        {seeMoreHref && (
-          <Link
-            href={seeMoreHref}
-            className="text-sm text-[#007185] hover:text-[#C7511F] hover:underline"
-          >
-            See more &gt;
-          </Link>
-        )}
-      </div>
-      <div className="relative">
+    <section className="mb-8 min-w-0 max-w-full">
+      <h2 className="mb-3 text-xl font-bold text-foreground">{title}</h2>
+      <div className="relative min-w-0 max-w-full">
         <div
           ref={trackRef}
-          className="flex gap-4 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex items-start gap-3 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {children}
         </div>
@@ -46,11 +36,20 @@ export function ProductShelf({
           type="button"
           onClick={scrollNext}
           aria-label="Scroll right"
-          className="absolute right-0 top-[40%] z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white shadow-md hover:bg-gray-50"
+          className="absolute right-0 top-[35%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card shadow-md hover:bg-muted sm:flex"
         >
-          <ChevronRight className="h-5 w-5 text-[#0F1111]" />
+          <ChevronRight className="h-5 w-5 text-foreground" />
         </button>
       </div>
+      {seeMoreHref && (
+        <Link
+          href={seeMoreHref}
+          className="mt-2 inline-flex items-center gap-0.5 text-sm text-link hover:text-link-hover hover:underline"
+        >
+          See more
+          <ChevronRight className="h-4 w-4" />
+        </Link>
+      )}
     </section>
   );
 }

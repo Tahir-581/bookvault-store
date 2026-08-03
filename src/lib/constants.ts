@@ -45,8 +45,8 @@ export const DEFAULT_SITE_CONFIG = {
   tagline: SITE_TAGLINE,
   currency: "GBP",
   locale: "en-GB",
-  primaryColor: "#FF9900",
-  secondaryColor: "#232F3E",
+  primaryColor: "#FEBD69",
+  secondaryColor: "#131921",
   membershipName: "BookPass",
   freeShippingThreshold: 25,
   taxRate: 0.2,
@@ -59,5 +59,8 @@ export const DEFAULT_SITE_CONFIG = {
   ebooksEnabled: true,
 };
 
-export const SUPABASE_STORAGE_URL =
-  "https://wksvadcdqgbaadokiaji.supabase.co/storage/v1/object/public/store-media";
+export const COVER_BUCKET = "books-site-media";
+
+export const SUPABASE_STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/${COVER_BUCKET}`
+  : `https://wksvadcdqgbaadokiaji.supabase.co/storage/v1/object/public/${COVER_BUCKET}`;

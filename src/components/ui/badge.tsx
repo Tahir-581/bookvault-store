@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils";
 
 const variants = {
-  default: "bg-gray-100 text-gray-800",
-  deal: "bg-[#CC0C39] text-white",
-  prime: "bg-[#232F3E] text-white",
-  success: "bg-green-100 text-green-800",
-  warning: "bg-yellow-100 text-yellow-800",
+  default: "bg-muted text-foreground",
+  deal: "bg-deal text-white",
+  prime: "bg-secondary text-secondary-foreground",
+  success: "bg-success/15 text-success",
+  warning: "bg-accent/20 text-accent-foreground",
 };
 
 export function Badge({

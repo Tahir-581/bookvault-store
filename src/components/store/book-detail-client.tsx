@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CoverZoom } from "@/components/store/cover-zoom";
 import { ReviewForm } from "@/components/store/review-form";
 import { StarRating } from "@/components/store/star-rating";
 import { ProductCard } from "@/components/store/product-card";
@@ -82,15 +82,18 @@ export function BookDetailClient({
         Books › {book.categories?.[0]?.name || "General"} › {book.title}
       </div>
 
-      <div className="grid gap-8 rounded-lg bg-white p-6 shadow-sm lg:grid-cols-2">
-        <div className="relative aspect-[2/3] max-h-[500px] bg-gray-50">
-          <Image src={cover} alt={book.title} fill className="object-contain p-4" priority />
-        </div>
+      <div className="grid gap-8 rounded-lg bg-card p-6 shadow-sm lg:grid-cols-2">
+        <CoverZoom
+          src={cover}
+          alt={book.title}
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          priority
+        />
 
         <div>
-          <h1 className="text-2xl font-medium text-[#0F1111] md:text-3xl">{book.title}</h1>
-          <p className="mt-1 text-lg text-[#007185]">
-            by <span className="hover:text-[#C7511F]">{book.author_name}</span>
+          <h1 className="text-2xl font-medium text-foreground md:text-3xl">{book.title}</h1>
+          <p className="mt-1 text-lg text-link">
+            by <span className="hover:text-link-hover">{book.author_name}</span>
           </p>
 
           <div className="mt-3">
@@ -103,11 +106,11 @@ export function BookDetailClient({
             </Badge>
           )}
 
-          <hr className="my-4 border-gray-200" />
+          <hr className="my-4 border-border" />
 
           {selectedFormat && (
             <div className="mb-4">
-              <span className="text-3xl font-medium text-[#B12704]">
+              <span className="text-3xl font-medium text-destructive">
                 {formatPrice(selectedFormat.price)}
               </span>
               {selectedFormat.compare_at_price && (
@@ -127,8 +130,8 @@ export function BookDetailClient({
                   onClick={() => setSelectedFormat(fmt)}
                   className={`rounded border px-4 py-2 text-sm ${
                     selectedFormat?.id === fmt.id
-                      ? "border-[#FF9900] bg-[#FFF8E7] ring-2 ring-[#FF9900]"
-                      : "border-gray-300 hover:border-gray-400"
+                      ? "border-accent bg-highlight ring-2 ring-accent"
+                      : "border-border hover:border-muted-foreground"
                   }`}
                 >
                   {FORMAT_LABELS[fmt.format as BookFormat]}
@@ -140,16 +143,16 @@ export function BookDetailClient({
           </div>
 
           {selectedFormat && selectedFormat.stock > 0 ? (
-            <p className="mb-4 text-sm text-[#007600]">In Stock</p>
+            <p className="mb-4 text-sm text-success">In Stock</p>
           ) : (
-            <p className="mb-4 text-sm text-[#B12704]">Currently unavailable</p>
+            <p className="mb-4 text-sm text-destructive">Currently unavailable</p>
           )}
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button onClick={handleAddToCart} size="lg" className="flex-1" disabled={!selectedFormat}>
+          <div className="flex flex-col gap-2">
+            <Button onClick={handleAddToCart} size="lg" className="w-full" disabled={!selectedFormat}>
               Add to Cart
             </Button>
-            <Button variant="secondary" size="lg" className="flex-1" onClick={handleAddToCart}>
+            <Button variant="secondary" size="lg" className="w-full" onClick={handleAddToCart}>
               Buy Now
             </Button>
           </div>
@@ -167,14 +170,14 @@ export function BookDetailClient({
         </div>
       </div>
 
-      <div className="mt-6 rounded-lg bg-white p-6 shadow-sm">
+      <div className="mt-6 rounded-lg bg-card p-6 shadow-sm">
         <h2 className="mb-4 text-xl font-bold">About this item</h2>
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
           {book.description}
         </p>
       </div>
 
-      <div className="mt-6 rounded-lg bg-white p-6 shadow-sm">
+      <div className="mt-6 rounded-lg bg-card p-6 shadow-sm">
         <h2 className="mb-4 text-xl font-bold">Customer reviews</h2>
         {reviews.length > 0 ? (
           <div className="mb-6 space-y-6">
@@ -199,7 +202,7 @@ export function BookDetailClient({
       </div>
 
       {related.length > 0 && (
-        <div className="mt-6 rounded-lg bg-white p-6 shadow-sm">
+        <div className="mt-6 rounded-lg bg-card p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-bold">Customers also bought</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
             {related.map((b) => (

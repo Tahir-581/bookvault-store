@@ -22,7 +22,7 @@ export function StarRating({
         key={i}
         className={cn(
           size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4",
-          filled || half ? "fill-[#FFA41C] text-[#FFA41C]" : "fill-gray-200 text-gray-200"
+          filled || half ? "fill-star text-star" : "fill-muted text-muted"
         )}
       />
     );
@@ -31,10 +31,10 @@ export function StarRating({
   if (showNumericFirst) {
     return (
       <div className="flex items-center gap-1">
-        <span className="text-sm text-[#0F1111]">{rating.toFixed(1)}</span>
+        <span className="text-sm text-foreground">{rating.toFixed(1)}</span>
         <div className="flex">{stars}</div>
         {showCount && count !== undefined && (
-          <span className="text-xs text-[#007185] hover:text-[#C7511F]">
+          <span className="text-xs text-link hover:text-link-hover">
             {count.toLocaleString()}
           </span>
         )}
@@ -46,7 +46,7 @@ export function StarRating({
     <div className="flex items-center gap-1">
       <div className="flex">{stars}</div>
       {showCount && count !== undefined && (
-        <span className="text-xs text-[#007185] hover:text-[#C7511F]">
+        <span className="text-xs text-link hover:text-link-hover">
           {count.toLocaleString()}
         </span>
       )}

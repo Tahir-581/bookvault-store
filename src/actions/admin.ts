@@ -6,6 +6,56 @@ import { requireAdmin } from "@/lib/auth";
 import { logAdminAction } from "@/actions/checkout";
 import { sendOrderStatusEmail } from "@/lib/email";
 import { slugify } from "@/lib/utils";
+import {
+  COVER_BUCKET,
+  buildCoverObjectPath,
+  getCoverPublicUrl,
+  validateCoverFile,
+  validateCoverUrl,
+} from "@/lib/storage/covers";
+
+async function resolveCoverUrl(
+  formData: FormData,
+  pathBase: string
+): Promise<{ url: string | null; error?: string }> {
+  const file = formData.get("cover_file");
+  const rawUrl = ((formData.get("cover_url") as string) || "").trim();
+
+  if (file instanceof File && file.size > 0) {
+    const fileError = validateCoverFile(file);
+    if (fileError) return { url: null, error: fileError };
+
+    const supabase = await createServiceClient();
+    const path = buildCoverObjectPath(pathBase, file.type);
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const { error: uploadError } = await supabase.storage
+      .from(COVER_BUCKET)
+      .upload(path, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      return { url: null, error: uploadError.message || "Cover upload failed" };
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      return { url: null, error: "Missing NEXT_PUBLIC_SUPABASE_URL" };
+    }
+
+    return { url: getCoverPublicUrl(supabaseUrl, path) };
+  }
+
+  if (rawUrl) {
+    const urlError = validateCoverUrl(rawUrl);
+    if (urlError) return { url: null, error: urlError };
+    return { url: rawUrl };
+  }
+
+  return { url: null };
+}
 
 export async function updateOrderStatusAction(
   orderId: string,
@@ -45,10 +95,12 @@ export async function createBookAction(formData: FormData) {
   const authorName = formData.get("author_name") as string;
   const slug = slugify(title);
   const description = formData.get("description") as string;
-  const coverUrl = formData.get("cover_url") as string;
   const paperbackPrice = Number(formData.get("paperback_price"));
   const hardcoverPrice = Number(formData.get("hardcover_price"));
   const audiobookPrice = Number(formData.get("audiobook_price"));
+
+  const cover = await resolveCoverUrl(formData, slug);
+  if (cover.error) return { error: cover.error };
 
   const { data: book, error } = await supabase
     .from("store_books")
@@ -57,7 +109,7 @@ export async function createBookAction(formData: FormData) {
       slug,
       author_name: authorName,
       description,
-      cover_url: coverUrl,
+      cover_url: cover.url,
       is_active: true,
     })
     .select()
@@ -293,13 +345,27 @@ export async function updateBookAction(bookId: string, formData: FormData) {
   const supabase = await createServiceClient();
   const paperbackPrice = formData.get("paperback_price");
   const audiobookPrice = formData.get("audiobook_price");
+  const title = formData.get("title") as string;
+  const slugBase = slugify(title) || bookId;
+
+  const cover = await resolveCoverUrl(formData, slugBase);
+  if (cover.error) return { error: cover.error };
+
+  const coverFile = formData.get("cover_file");
+  const hasNewFile = coverFile instanceof File && coverFile.size > 0;
+  const rawCoverUrl = ((formData.get("cover_url") as string) || "").trim();
+  // Keep existing cover unless a new file or explicit URL was provided
+  const coverUpdate =
+    hasNewFile || rawCoverUrl
+      ? { cover_url: cover.url }
+      : {};
 
   await supabase
     .from("store_books")
     .update({
-      title: formData.get("title") as string,
+      title,
       author_name: formData.get("author_name") as string,
-      cover_url: (formData.get("cover_url") as string) || null,
+      ...coverUpdate,
       is_bestseller: formData.get("is_bestseller") === "on",
       is_new_release: formData.get("is_new_release") === "on",
       is_featured: formData.get("is_featured") === "on",

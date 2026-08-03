@@ -12,7 +12,7 @@ export default async function HomePage() {
   return (
     <>
       <BooksSubNav items={booksSubNav} deptLabel="books" />
-      <div className="mx-auto max-w-[1500px] bg-white px-4 py-4">
+      <div className="mx-auto w-full min-w-0 max-w-[1500px] bg-background px-3 py-3 sm:px-4">
         <HomepageSectionRenderer
           sections={sections as import("@/lib/types").HomepageSection[]}
           membershipName={config.membershipName}

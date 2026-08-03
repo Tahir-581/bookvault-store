@@ -1,16 +1,69 @@
 @import "tailwindcss";
 
 :root {
-  --background: #eaeded;
+  --background: #ffffff;
   --foreground: #0f1111;
-  --amazon-orange: #ff9900;
-  --amazon-dark: #131921;
-  --amazon-nav: #232f3e;
+  --card: #ffffff;
+  --muted: #f0f2f2;
+  --muted-foreground: #565959;
+  --primary: #232f3e;
+  --primary-foreground: #ffffff;
+  --secondary: #232f3e;
+  --secondary-foreground: #ffffff;
+  --accent: #febd69;
+  --accent-foreground: #0f1111;
+  --accent-hover: #f3a847;
+  --cta: #febd69;
+  --cta-hover: #f3a847;
+  --cta-border: #f3a847;
+  --link: #007185;
+  --link-hover: #c7511f;
+  --destructive: #b12704;
+  --deal: #cc0c39;
+  --success: #067d62;
+  --star: #ffa41c;
+  --border: #d5d9d9;
+  --header: #131921;
+  --nav-hover: #37475a;
+  --highlight: #f7f8f8;
+  --footer-top: #37475a;
+  --footer-legal: #131a22;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-hover: var(--accent-hover);
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
+  --color-cta-border: var(--cta-border);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-destructive: var(--destructive);
+  --color-deal: var(--deal);
+  --color-success: var(--success);
+  --color-star: var(--star);
+  --color-border: var(--border);
+  --color-header: var(--header);
+  --color-nav-hover: var(--nav-hover);
+  --color-highlight: var(--highlight);
+  --color-footer-top: var(--footer-top);
+  --color-footer-legal: var(--footer-legal);
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -20,9 +73,9 @@ body {
 }
 
 a {
-  color: #007185;
+  color: var(--link);
 }
 
 a:hover {
-  color: #c7511f;
+  color: var(--link-hover);
 }

@@ -43,7 +43,7 @@ export default async function AccountPage() {
         <Link href="/account/reviews" className="rounded border bg-white p-4 hover:shadow-sm">Your Reviews</Link>
         <Link href="/account/membership" className="rounded border bg-white p-4 hover:shadow-sm">BookPass Membership</Link>
         {admin && (
-          <Link href="/admin" className="rounded border bg-[#232F3E] p-4 text-white hover:bg-[#37475A]">Admin Dashboard</Link>
+          <Link href="/admin" className="rounded border bg-secondary p-4 text-secondary-foreground hover:bg-nav-hover">Admin Dashboard</Link>
         )}
       </div>
     </div>

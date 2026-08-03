@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ChevronDown,
   MapPin,
   Menu,
   Search,
@@ -11,6 +10,7 @@ import {
   User,
 } from "lucide-react";
 import { useState } from "react";
+import { MobileNavDrawer } from "@/components/store/mobile-nav-drawer";
 import { useCartStore } from "@/lib/store/cart";
 import type { NavMenuItem } from "@/lib/types";
 
@@ -27,7 +27,7 @@ export function StoreHeader({
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [deptOpen, setDeptOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const totalItems = useCartStore((s) => s.totalItems());
 
   function handleSearch(e: React.FormEvent) {
@@ -36,123 +36,184 @@ export function StoreHeader({
   }
 
   return (
-    <header className="sticky top-0 z-50">
-      {announcement?.isActive && announcement.text && (
-        <div className="bg-[#232F3E] px-4 py-1.5 text-center text-xs text-white">
-          {announcement.text}
-        </div>
-      )}
+    <>
+      <header className="sticky top-0 z-50 overflow-x-hidden">
+        {announcement?.isActive && announcement.text && (
+          <div className="bg-secondary px-4 py-1.5 text-center text-xs text-secondary-foreground">
+            {announcement.text}
+          </div>
+        )}
 
-      <div className="bg-[#131921] text-white">
-        <div className="mx-auto flex max-w-[1500px] items-center gap-3 px-4 py-2">
-          <Link href="/" className="shrink-0 text-xl font-bold text-white">
-            {siteName}
-          </Link>
+        <div className="bg-header text-white">
+          {/* Mobile top bar: hamburger | logo | sign in | cart */}
+          <div className="flex items-center gap-2 px-3 py-2 sm:hidden">
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="flex h-10 w-10 shrink-0 items-center justify-center text-white"
+              aria-label="Open menu"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            <Link
+              href="/"
+              className="min-w-0 flex-1 truncate text-center text-lg font-bold text-white hover:text-white"
+            >
+              {siteName}
+            </Link>
+            <Link
+              href="/account"
+              className="flex shrink-0 items-center gap-0.5 px-1 py-1 text-xs text-white hover:text-white"
+              aria-label="Sign in"
+            >
+              <span className="whitespace-nowrap">Sign in</span>
+              <User className="h-5 w-5" />
+            </Link>
+            <Link
+              href="/cart"
+              className="relative flex shrink-0 items-center px-1 py-1"
+              aria-label="Cart"
+            >
+              <ShoppingCart className="h-7 w-7" />
+              <span className="absolute -right-0.5 -top-0.5 rounded-full bg-accent px-1.5 text-[11px] font-bold leading-4 text-accent-foreground">
+                {totalItems}
+              </span>
+            </Link>
+          </div>
 
-          <button className="hidden items-center gap-1 text-xs hover:outline hover:outline-1 hover:outline-white sm:flex">
-            <MapPin className="h-4 w-4" />
-            <div className="text-left">
-              <div className="text-gray-300">Deliver to</div>
-              <div className="font-bold">United Kingdom</div>
-            </div>
-          </button>
-
-          <form onSubmit={handleSearch} className="flex flex-1">
-            <select className="hidden rounded-l-md bg-gray-100 px-2 text-sm text-gray-800 sm:block">
-              <option>Books</option>
-            </select>
+          {/* Mobile search row */}
+          <form onSubmit={handleSearch} className="flex px-3 pb-2 sm:hidden">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search BookVault"
-              className="w-full rounded-l-md px-4 py-2 text-sm text-black sm:rounded-none"
+              placeholder="Books"
+              className="min-w-0 flex-1 rounded-l-sm border-0 bg-white px-3 py-2.5 text-sm text-black outline-none"
             />
             <button
               type="submit"
-              className="rounded-r-md bg-[#FF9900] px-4 py-2 hover:bg-[#F08804]"
+              className="shrink-0 rounded-r-sm bg-accent px-3.5 py-2.5 hover:bg-accent-hover"
+              aria-label="Search"
             >
-              <Search className="h-5 w-5 text-black" />
+              <Search className="h-5 w-5 text-accent-foreground" />
             </button>
           </form>
 
-          <Link
-            href="/account"
-            className="hidden items-center gap-1 px-2 py-1 text-xs hover:outline hover:outline-1 hover:outline-white sm:flex"
-          >
-            <User className="h-5 w-5" />
-            <div>
-              <div className="text-gray-300">Hello, sign in</div>
-              <div className="font-bold">Account & Lists</div>
-            </div>
-          </Link>
+          {/* Mobile deliver-to strip */}
+          <div className="flex items-center gap-1 bg-[#232f3e] px-3 py-1.5 text-xs text-gray-200 sm:hidden">
+            <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <span>Deliver to United Kingdom</span>
+          </div>
 
-          <Link
-            href="/account/orders"
-            className="hidden px-2 py-1 text-xs hover:outline hover:outline-1 hover:outline-white md:block"
-          >
-            <div className="text-gray-300">Returns</div>
-            <div className="font-bold">& Orders</div>
-          </Link>
-
-          <Link
-            href="/cart"
-            className="relative flex items-end gap-1 px-2 py-1 hover:outline hover:outline-1 hover:outline-white"
-          >
-            <ShoppingCart className="h-8 w-8" />
-            <span className="absolute left-5 top-0 rounded-full bg-[#FF9900] px-1.5 text-xs font-bold text-black">
-              {totalItems}
-            </span>
-            <span className="hidden font-bold sm:inline">Cart</span>
-          </Link>
-        </div>
-
-        <div className="mx-auto flex max-w-[1500px] items-center gap-4 px-4 pb-2 text-sm">
-          <div className="relative">
+          {/* Desktop / tablet header */}
+          <div className="mx-auto hidden min-w-0 max-w-[1500px] items-center gap-3 px-4 py-2 sm:flex">
             <button
-              onClick={() => setDeptOpen(!deptOpen)}
-              className="flex items-center gap-1 px-2 py-1 hover:outline hover:outline-1 hover:outline-white"
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="flex shrink-0 items-center gap-1 px-2 py-1 text-white hover:outline hover:outline-1 hover:outline-white lg:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            <Link
+              href="/"
+              className="max-w-[28vw] shrink-0 truncate text-xl font-bold text-white hover:text-white sm:max-w-none"
+            >
+              {siteName}
+            </Link>
+
+            <button
+              type="button"
+              className="hidden shrink-0 items-center gap-1 text-xs hover:outline hover:outline-1 hover:outline-white md:flex"
+            >
+              <MapPin className="h-4 w-4" />
+              <div className="text-left">
+                <div className="text-gray-300">Deliver to</div>
+                <div className="font-bold">United Kingdom</div>
+              </div>
+            </button>
+
+            <form onSubmit={handleSearch} className="flex min-w-0 flex-1">
+              <select className="hidden shrink-0 rounded-l-md bg-gray-100 px-2 text-sm text-gray-800 md:block">
+                <option>Books</option>
+              </select>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search"
+                className="min-w-0 flex-1 rounded-l-md px-2 py-2 text-sm text-white placeholder:text-gray-400 md:rounded-none md:px-4"
+              />
+              <button
+                type="submit"
+                className="shrink-0 rounded-r-md bg-accent px-4 py-2 hover:bg-accent-hover"
+                aria-label="Search"
+              >
+                <Search className="h-5 w-5 text-accent-foreground" />
+              </button>
+            </form>
+
+            <Link
+              href="/account"
+              className="hidden shrink-0 items-center gap-1 px-2 py-1 text-xs text-white hover:text-white hover:outline hover:outline-1 hover:outline-white md:flex"
+            >
+              <User className="h-5 w-5" />
+              <div>
+                <div className="text-gray-300">Hello, sign in</div>
+                <div className="font-bold">Account & Lists</div>
+              </div>
+            </Link>
+
+            <Link
+              href="/account/orders"
+              className="hidden shrink-0 px-2 py-1 text-xs text-white hover:text-white hover:outline hover:outline-1 hover:outline-white lg:block"
+            >
+              <div className="text-gray-300">Returns</div>
+              <div className="font-bold">& Orders</div>
+            </Link>
+
+            <Link
+              href="/cart"
+              className="relative flex shrink-0 items-end gap-1 px-2 py-1 hover:outline hover:outline-1 hover:outline-white"
+              aria-label="Cart"
+            >
+              <ShoppingCart className="h-8 w-8" />
+              <span className="absolute left-5 top-0 rounded-full bg-accent px-1.5 text-xs font-bold text-accent-foreground">
+                {totalItems}
+              </span>
+              <span className="hidden font-bold md:inline">Cart</span>
+            </Link>
+          </div>
+
+          {/* Desktop secondary nav */}
+          <div className="mx-auto hidden min-w-0 max-w-[1500px] items-center gap-4 overflow-x-auto bg-[#232f3e] px-4 pb-2 text-sm sm:flex [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="flex shrink-0 items-center gap-1 whitespace-nowrap px-2 py-1 text-white hover:outline hover:outline-1 hover:outline-white"
             >
               <Menu className="h-5 w-5" />
               All
-              <ChevronDown className="h-4 w-4" />
             </button>
-            {deptOpen && (
-              <div className="absolute left-0 top-full z-50 min-w-[280px] rounded border bg-white py-2 text-black shadow-lg">
-                {megaMenu.map((item) => (
-                  <div key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="block px-4 py-2 font-medium hover:bg-gray-100"
-                      onClick={() => setDeptOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                    {item.children?.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className="block px-8 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
-                        onClick={() => setDeptOpen(false)}
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
+            {secondaryNav.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="shrink-0 whitespace-nowrap px-2 py-1 text-white hover:text-white hover:outline hover:outline-1 hover:outline-white"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
-          {secondaryNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="whitespace-nowrap px-2 py-1 hover:outline hover:outline-1 hover:outline-white"
-            >
-              {item.label}
-            </Link>
-          ))}
         </div>
-      </div>
-    </header>
+      </header>
+
+      <MobileNavDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        siteName={siteName}
+        megaMenu={megaMenu}
+        secondaryNav={secondaryNav}
+      />
+    </>
   );
 }
