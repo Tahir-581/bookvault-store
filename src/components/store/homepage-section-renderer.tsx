@@ -48,7 +48,7 @@ async function SectionBlock({
 
     case "category_tiles":
       return (
-        <section className="mb-8">
+        <section className="mb-6">
           <h2 className="mb-2 text-xl font-bold text-foreground">
             {section.title || "Explore categories"}
           </h2>
@@ -73,8 +73,8 @@ async function SectionBlock({
     case "editorial":
       const cta = config.cta;
       return (
-        <section className="mb-8 rounded-lg bg-secondary p-8 text-center text-secondary-foreground">
-          <h2 className="text-2xl font-bold">{section.title || "Why Ilfaaz?"}</h2>
+        <section className="mb-6 rounded-lg bg-secondary p-8 text-center text-secondary-foreground">
+          <h2 className="text-2xl font-bold">{section.title || "Why ilfaaz?"}</h2>
           {section.subtitle && (
             <p className="mt-2 text-gray-300">{section.subtitle}</p>
           )}

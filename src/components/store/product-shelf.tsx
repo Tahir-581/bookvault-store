@@ -23,8 +23,19 @@ export function ProductShelf({
   }
 
   return (
-    <section className="mb-8 min-w-0 max-w-full">
-      <h2 className="mb-3 text-xl font-bold text-foreground">{title}</h2>
+    <section className="mb-6 min-w-0 max-w-full">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 className="text-xl font-bold text-foreground">{title}</h2>
+        {seeMoreHref && (
+          <Link
+            href={seeMoreHref}
+            className="inline-flex shrink-0 items-center gap-0.5 text-sm text-link hover:text-link-hover hover:underline"
+          >
+            See more
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        )}
+      </div>
       <div className="relative min-w-0 max-w-full">
         <div
           ref={trackRef}
@@ -41,15 +52,6 @@ export function ProductShelf({
           <ChevronRight className="h-5 w-5 text-foreground" />
         </button>
       </div>
-      {seeMoreHref && (
-        <Link
-          href={seeMoreHref}
-          className="mt-2 inline-flex items-center gap-0.5 text-sm text-link hover:text-link-hover hover:underline"
-        >
-          See more
-          <ChevronRight className="h-4 w-4" />
-        </Link>
-      )}
     </section>
   );
 }
