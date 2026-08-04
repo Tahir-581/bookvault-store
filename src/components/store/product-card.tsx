@@ -45,7 +45,7 @@ export function ProductCard({
       <Link
         href={`/dp/${book.slug}`}
         className={cn(
-          "group flex w-[148px] shrink-0 flex-col transition-transform duration-300 hover:scale-105 sm:w-[170px]",
+          "group flex w-[178px] shrink-0 flex-col transition-transform duration-300 hover:scale-105 sm:w-[204px]",
           className
         )}
       >
@@ -54,7 +54,7 @@ export function ProductCard({
             src={cover}
             alt={book.title}
             className="object-contain p-0.5 transition-transform duration-300 group-hover:scale-110"
-            sizes="170px"
+            sizes="204px"
           />
         </div>
         <h3 className="mt-1 line-clamp-2 text-sm leading-snug text-foreground group-hover:text-link-hover">
