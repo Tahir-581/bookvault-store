@@ -99,7 +99,7 @@ export function StoreHeader({
           </form>
 
           {/* Mobile deliver-to strip */}
-          <div className="flex w-full items-center gap-1 bg-[#232f3e] px-3 py-1.5 text-xs text-gray-200 sm:hidden">
+          <div className="flex w-full items-center gap-1 bg-[#232f3e] px-3 py-2.5 text-xs text-gray-200 sm:hidden">
             <MapPin className="h-3.5 w-3.5 shrink-0" />
             <span>Deliver to Pakistan</span>
           </div>
