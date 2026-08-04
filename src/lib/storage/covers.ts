@@ -68,4 +68,49 @@ export function getCoverPublicUrl(supabaseUrl: string, path: string): string {
   return `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/${COVER_BUCKET}/${path}`;
 }
 
+/** Extract storage object path from a public URL for our cover bucket, or null. */
+export function parseCoverStoragePath(publicUrl: string): string | null {
+  if (!publicUrl) return null;
+  try {
+    const pathname = new URL(publicUrl).pathname;
+    const marker = `/storage/v1/object/public/${COVER_BUCKET}/`;
+    const idx = pathname.indexOf(marker);
+    if (idx === -1) return null;
+    const path = decodeURIComponent(pathname.slice(idx + marker.length));
+    return path || null;
+  } catch {
+    return null;
+  }
+}
+
+type StorageRemover = {
+  storage: {
+    from: (bucket: string) => {
+      remove: (
+        paths: string[]
+      ) => Promise<{ error: { message: string } | null }>;
+    };
+  };
+};
+
+/** Delete a bucket-hosted cover. No-op for external URLs. */
+export async function deleteStoredCover(
+  supabase: StorageRemover,
+  publicUrl: string | null | undefined
+): Promise<{ deleted: boolean; error?: string }> {
+  if (!publicUrl) return { deleted: false };
+
+  const path = parseCoverStoragePath(publicUrl);
+  if (!path) return { deleted: false };
+
+  const { error } = await supabase.storage.from(COVER_BUCKET).remove([path]);
+  if (error) {
+    return {
+      deleted: false,
+      error: error.message || "Failed to delete cover from storage",
+    };
+  }
+  return { deleted: true };
+}
+
 export { COVER_BUCKET };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { createBookAction, deleteBookAction, updateBookAction } from "@/actions/admin";
 import { Button } from "@/components/ui/button";
@@ -19,16 +19,23 @@ const BADGE_FIELDS = [
 function CoverFields({
   existingUrl,
   inputId,
+  allowRemove = false,
 }: {
   existingUrl?: string | null;
   inputId: string;
+  allowRemove?: boolean;
 }) {
   const usableExisting =
     existingUrl && !isGoogleDriveShareUrl(existingUrl) ? existingUrl : null;
   const [preview, setPreview] = useState<string | null>(usableExisting);
+  const [removeCover, setRemoveCover] = useState(false);
+  const [coverUrlValue, setCoverUrlValue] = useState(usableExisting || "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setPreview(usableExisting);
+    setRemoveCover(false);
+    setCoverUrlValue(usableExisting || "");
   }, [usableExisting]);
 
   useEffect(() => {
@@ -40,27 +47,47 @@ function CoverFields({
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) {
-      setPreview(usableExisting);
+      setPreview(removeCover ? null : usableExisting);
       return;
     }
+    setRemoveCover(false);
     const objectUrl = URL.createObjectURL(file);
     setPreview(objectUrl);
   }
+
+  function onRemoveChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const checked = e.target.checked;
+    setRemoveCover(checked);
+    if (checked) {
+      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+      setPreview(null);
+      setCoverUrlValue("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } else {
+      setPreview(usableExisting);
+      setCoverUrlValue(usableExisting || "");
+    }
+  }
+
+  const showRemove = allowRemove && Boolean(existingUrl);
 
   return (
     <div className="md:col-span-2 space-y-3">
       <div>
         <Label htmlFor={inputId}>Cover image</Label>
         <Input
+          ref={fileInputRef}
           id={inputId}
           name="cover_file"
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif"
           className="mt-1 cursor-pointer"
           onChange={onFileChange}
+          disabled={removeCover}
         />
         <p className="mt-1 text-xs text-gray-500">
-          Upload a JPG, PNG, or WebP (max 5 MB). Do not paste Google Drive links.
+          Recommended size 800×1200 px (2:3). JPG, PNG, or WebP, max 5 MB. Do not
+          paste Google Drive links.
         </p>
       </div>
       {preview ? (
@@ -70,10 +97,30 @@ function CoverFields({
           alt="Cover preview"
           className="h-40 w-28 rounded object-cover border bg-gray-100"
         />
-      ) : existingUrl && isGoogleDriveShareUrl(existingUrl) ? (
+      ) : existingUrl && isGoogleDriveShareUrl(existingUrl) && !removeCover ? (
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
           Current cover is a Google Drive link and will not display. Upload an image file to fix it.
         </p>
+      ) : null}
+      {showRemove ? (
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="remove_cover"
+            value="on"
+            checked={removeCover}
+            onChange={onRemoveChange}
+            className="mt-0.5"
+          />
+          <span>
+            Remove cover
+            {removeCover ? (
+              <span className="block text-xs text-amber-700 mt-0.5">
+                Cover will be deleted from storage and cleared when you save.
+              </span>
+            ) : null}
+          </span>
+        </label>
       ) : null}
       <details className="text-sm">
         <summary className="cursor-pointer text-gray-600">
@@ -85,7 +132,12 @@ function CoverFields({
             name="cover_url"
             type="url"
             placeholder="https://…"
-            defaultValue={usableExisting || ""}
+            value={coverUrlValue}
+            onChange={(e) => {
+              setRemoveCover(false);
+              setCoverUrlValue(e.target.value);
+            }}
+            disabled={removeCover}
           />
         </div>
       </details>
@@ -246,6 +298,7 @@ export function AdminBooksManager({
               key={editing.id}
               inputId="edit-cover-file"
               existingUrl={editing.cover_url}
+              allowRemove
             />
             <div>
               <Label>Price (PKR)</Label>

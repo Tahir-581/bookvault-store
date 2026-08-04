@@ -9,7 +9,9 @@ import { parseWholeRupee, slugify } from "@/lib/utils";
 import {
   COVER_BUCKET,
   buildCoverObjectPath,
+  deleteStoredCover,
   getCoverPublicUrl,
+  parseCoverStoragePath,
   validateCoverFile,
   validateCoverUrl,
 } from "@/lib/storage/covers";
@@ -426,17 +428,40 @@ export async function updateBookAction(bookId: string, formData: FormData) {
   const title = formData.get("title") as string;
   const slugBase = slugify(title) || bookId;
 
-  const cover = await resolveCoverUrl(formData, slugBase);
-  if (cover.error) return { error: cover.error };
+  const { data: currentBook } = await supabase
+    .from("store_books")
+    .select("cover_url")
+    .eq("id", bookId)
+    .maybeSingle();
+  const previousCoverUrl = currentBook?.cover_url ?? null;
 
   const coverFile = formData.get("cover_file");
   const hasNewFile = coverFile instanceof File && coverFile.size > 0;
   const rawCoverUrl = ((formData.get("cover_url") as string) || "").trim();
-  // Keep existing cover unless a new file or explicit URL was provided
-  const coverUpdate =
-    hasNewFile || rawCoverUrl
-      ? { cover_url: cover.url }
-      : {};
+  const removeCover = formData.get("remove_cover") === "on";
+
+  let coverUpdate: { cover_url: string | null } | Record<string, never> = {};
+
+  if (hasNewFile || (rawCoverUrl && !removeCover)) {
+    const cover = await resolveCoverUrl(formData, slugBase);
+    if (cover.error) return { error: cover.error };
+
+    const newUrl = cover.url;
+    const prevPath = previousCoverUrl
+      ? parseCoverStoragePath(previousCoverUrl)
+      : null;
+    const nextPath = newUrl ? parseCoverStoragePath(newUrl) : null;
+    if (prevPath && prevPath !== nextPath) {
+      const deleted = await deleteStoredCover(supabase, previousCoverUrl);
+      if (deleted.error) return { error: deleted.error };
+    }
+
+    coverUpdate = { cover_url: newUrl };
+  } else if (removeCover) {
+    const deleted = await deleteStoredCover(supabase, previousCoverUrl);
+    if (deleted.error) return { error: deleted.error };
+    coverUpdate = { cover_url: null };
+  }
 
   const tags = formData.getAll("tags").map(String).filter(Boolean);
 
