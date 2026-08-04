@@ -179,7 +179,7 @@ export async function createCheckoutSessionAction(formData: {
     line_items: formData.items.map((item) => ({
       price_data: {
         currency: config.currency.toLowerCase(),
-        product_data: { name: `${item.title} (${item.format})` },
+        product_data: { name: item.title },
         unit_amount: Math.round(item.unitPrice * 100),
       },
       quantity: item.quantity,

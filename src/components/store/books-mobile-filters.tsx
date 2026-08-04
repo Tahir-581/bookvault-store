@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BottomSheet } from "@/components/store/bottom-sheet";
 import { FilterSidebar } from "@/components/store/filter-sidebar";
-import { FormatFilterPills } from "@/components/store/format-filter-pills";
 import type { Category } from "@/lib/types";
 
 export function BooksMobileFilters({
@@ -34,8 +33,7 @@ export function BooksMobileFilters({
 
   return (
     <div className="mb-3 lg:hidden">
-      <FormatFilterPills showClear />
-      <div className="mt-2 flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setOpen(true)}

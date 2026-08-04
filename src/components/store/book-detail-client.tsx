@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { toast } from "sonner";
 import { CoverZoom } from "@/components/store/cover-zoom";
 import { ReviewForm } from "@/components/store/review-form";
@@ -8,7 +7,7 @@ import { StarRating } from "@/components/store/star-rating";
 import { ProductCard } from "@/components/store/product-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FORMAT_LABELS, type BookFormat } from "@/lib/constants";
+import type { BookFormat } from "@/lib/constants";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { formatPrice } from "@/lib/utils";
@@ -36,25 +35,26 @@ export function BookDetailClient({
   reviews: Review[];
   related: BookWithFormats[];
 }) {
-  const [selectedFormat, setSelectedFormat] = useState(
-    book.formats[0] || null
-  );
+  const format = book.formats[0] || null;
   const addToCart = useCartStore((s) => s.addItem);
   const { addItem: addToWishlist, hasItem, removeItem } = useWishlistStore();
   const inWishlist = hasItem(book.id);
 
   const cover = book.cover_url || "/placeholder-book.svg";
+  const tagLabels = book.tag_labels?.length
+    ? book.tag_labels
+    : book.tags || [];
 
   function handleAddToCart() {
-    if (!selectedFormat) return;
+    if (!format) return;
     addToCart({
       bookId: book.id,
-      formatId: selectedFormat.id,
+      formatId: format.id,
       title: book.title,
       author: book.author_name,
       coverUrl: cover,
-      format: selectedFormat.format as BookFormat,
-      unitPrice: selectedFormat.price,
+      format: "hardcover" as BookFormat,
+      unitPrice: format.price,
       quantity: 1,
     });
     toast.success("Added to cart");
@@ -70,7 +70,7 @@ export function BookDetailClient({
         title: book.title,
         author: book.author_name,
         coverUrl: cover,
-        format: (selectedFormat?.format as BookFormat) || "paperback",
+        format: "hardcover",
       });
       toast.success("Added to wishlist");
     }
@@ -106,53 +106,36 @@ export function BookDetailClient({
             </Badge>
           )}
 
+          {tagLabels.length > 0 && (
+            <p className="mt-3 text-sm text-muted-foreground">{tagLabels.join(" · ")}</p>
+          )}
+
           <hr className="my-4 border-border" />
 
-          {selectedFormat && (
+          {format && (
             <div className="mb-4">
               <span className="text-3xl font-medium text-destructive">
-                {formatPrice(selectedFormat.price)}
+                {formatPrice(format.price)}
               </span>
-              {selectedFormat.compare_at_price && (
+              {format.compare_at_price && (
                 <span className="ml-2 text-sm text-gray-500 line-through">
-                  {formatPrice(selectedFormat.compare_at_price)}
+                  {formatPrice(format.compare_at_price)}
                 </span>
               )}
             </div>
           )}
 
-          <div className="mb-4">
-            <p className="mb-2 text-sm font-bold">Format:</p>
-            <div className="flex flex-wrap gap-2">
-              {book.formats.map((fmt) => (
-                <button
-                  key={fmt.id}
-                  onClick={() => setSelectedFormat(fmt)}
-                  className={`rounded border px-4 py-2 text-sm ${
-                    selectedFormat?.id === fmt.id
-                      ? "border-accent bg-highlight ring-2 ring-accent"
-                      : "border-border hover:border-muted-foreground"
-                  }`}
-                >
-                  {FORMAT_LABELS[fmt.format as BookFormat]}
-                  <br />
-                  <span className="font-medium">{formatPrice(fmt.price)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {selectedFormat && selectedFormat.stock > 0 ? (
+          {format && format.stock > 0 ? (
             <p className="mb-4 text-sm text-success">In Stock</p>
           ) : (
             <p className="mb-4 text-sm text-destructive">Currently unavailable</p>
           )}
 
           <div className="flex flex-col gap-2">
-            <Button onClick={handleAddToCart} size="lg" className="w-full" disabled={!selectedFormat}>
+            <Button onClick={handleAddToCart} size="lg" className="w-full" disabled={!format}>
               Add to Cart
             </Button>
-            <Button variant="secondary" size="lg" className="w-full" onClick={handleAddToCart}>
+            <Button variant="secondary" size="lg" className="w-full" onClick={handleAddToCart} disabled={!format}>
               Buy Now
             </Button>
           </div>
@@ -202,9 +185,9 @@ export function BookDetailClient({
       </div>
 
       {related.length > 0 && (
-        <div className="mt-6 rounded-lg bg-card p-6 shadow-sm">
+        <div className="mt-6">
           <h2 className="mb-4 text-xl font-bold">Customers also bought</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {related.map((b) => (
               <ProductCard key={b.id} book={b} />
             ))}

@@ -18,6 +18,13 @@ export type SiteConfig = {
   membershipEnabled: boolean;
 };
 
+export type Tag = {
+  id: string;
+  name: string;
+  slug: string;
+  created_at?: string;
+};
+
 export type Book = {
   id: string;
   title: string;
@@ -36,10 +43,10 @@ export type Book = {
   is_featured: boolean;
   is_bestseller: boolean;
   is_new_release: boolean;
-  is_prime_eligible?: boolean;
-  is_first_reads?: boolean;
-  is_audible_exclusive?: boolean;
+  /** Tag slugs assigned to the book */
   tags: string[] | null;
+  /** Resolved display names for `tags` */
+  tag_labels?: string[];
   is_active: boolean;
   created_at: string;
 };
@@ -114,7 +121,6 @@ export type NavMenuItem = {
 
 export type HomepageSectionConfig = {
   filter?: "bestseller" | "new_release" | "featured" | "deals";
-  format?: "paperback" | "hardcover" | "audiobook" | "print";
   category?: string;
   limit?: number;
   see_more_href?: string;
@@ -151,3 +157,5 @@ export type DealWithBook = {
   is_active: boolean;
   book: BookWithFormats;
 };
+
+export type { BookFormat };

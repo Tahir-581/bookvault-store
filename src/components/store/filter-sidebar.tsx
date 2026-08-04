@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,23 +52,6 @@ export function FilterSidebar({
             </li>
           ))}
         </ul>
-      </div>
-
-      <div>
-        <h3 className="mb-2 font-bold text-foreground">Format</h3>
-        <div className="space-y-2 text-sm">
-          {["paperback", "hardcover", "audiobook"].map((fmt) => (
-            <label key={fmt} className="flex items-center gap-2 capitalize">
-              <input
-                type="radio"
-                name="format"
-                checked={currentFilters.format === fmt}
-                onChange={() => updateFilter("format", fmt)}
-              />
-              {fmt === "audiobook" ? "Audible Audiobook" : fmt}
-            </label>
-          ))}
-        </div>
       </div>
 
       <div>

@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 const variants = {
   default: "bg-muted text-foreground",
   deal: "bg-deal text-white",
-  prime: "bg-secondary text-secondary-foreground",
   success: "bg-success/15 text-success",
   warning: "bg-accent/20 text-accent-foreground",
 };

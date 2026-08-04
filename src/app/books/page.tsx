@@ -19,7 +19,6 @@ export default async function BooksPage({
     getBooks({
       q: params.q,
       category: params.category,
-      format: params.format,
       minPrice: params.minPrice ? Number(params.minPrice) : undefined,
       maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
       minRating: params.minRating ? Number(params.minRating) : undefined,
@@ -29,7 +28,6 @@ export default async function BooksPage({
   ]);
 
   const totalPages = Math.ceil(total / pageSize);
-  const preferredFormat = params.format;
 
   return (
     <>
@@ -81,7 +79,6 @@ export default async function BooksPage({
                     key={book.id}
                     book={book}
                     variant="storefront"
-                    preferredFormat={preferredFormat}
                     className="!w-full"
                   />
                 ))}

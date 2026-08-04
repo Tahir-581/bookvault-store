@@ -8,15 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatPrice } from "@/lib/utils";
 import { isGoogleDriveShareUrl } from "@/lib/storage/covers";
-import type { BookWithFormats } from "@/lib/types";
+import type { BookWithFormats, Tag } from "@/lib/types";
 
 const BADGE_FIELDS = [
   { name: "is_bestseller", label: "Bestseller" },
   { name: "is_new_release", label: "New Release" },
   { name: "is_featured", label: "Featured" },
-  { name: "is_prime_eligible", label: "Prime" },
-  { name: "is_first_reads", label: "First Reads" },
-  { name: "is_audible_exclusive", label: "Audible Exclusive" },
 ] as const;
 
 function CoverFields({
@@ -96,9 +93,64 @@ function CoverFields({
   );
 }
 
-export function AdminBooksManager({ books }: { books: BookWithFormats[] }) {
+function TagCheckboxes({
+  tags,
+  selected,
+}: {
+  tags: Tag[];
+  selected?: string[] | null;
+}) {
+  const selectedSet = new Set(selected || []);
+  if (tags.length === 0) {
+    return (
+      <p className="text-xs text-gray-500 md:col-span-2">
+        No tags yet. Create some under{" "}
+        <a href="/admin/tags" className="text-link underline">
+          Tags
+        </a>
+        .
+      </p>
+    );
+  }
+  return (
+    <div className="md:col-span-2">
+      <Label>Tags</Label>
+      <div className="mt-2 flex flex-wrap gap-3">
+        {tags.map((tag) => (
+          <label key={tag.id} className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="tags"
+              value={tag.slug}
+              defaultChecked={selectedSet.has(tag.slug)}
+            />
+            {tag.name}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AdminBooksManager({
+  books,
+  tags,
+}: {
+  books: BookWithFormats[];
+  tags: Tag[];
+}) {
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState<BookWithFormats | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredBooks = normalizedQuery
+    ? books.filter(
+        (book) =>
+          book.title.toLowerCase().includes(normalizedQuery) ||
+          book.author_name.toLowerCase().includes(normalizedQuery),
+      )
+    : books;
 
   function handleCreate(formData: FormData) {
     startTransition(async () => {
@@ -133,8 +185,7 @@ export function AdminBooksManager({ books }: { books: BookWithFormats[] }) {
     });
   }
 
-  const paperback = editing?.formats.find((f) => f.format === "paperback");
-  const audiobook = editing?.formats.find((f) => f.format === "audiobook");
+  const hardcover = editing?.formats.find((f) => f.format === "hardcover") || editing?.formats[0];
 
   return (
     <div>
@@ -161,17 +212,14 @@ export function AdminBooksManager({ books }: { books: BookWithFormats[] }) {
           </div>
           <CoverFields inputId="create-cover-file" />
           <div>
-            <Label>Paperback Price (PKR)</Label>
-            <Input name="paperback_price" type="number" step="1" inputMode="numeric" />
+            <Label>Price (PKR)</Label>
+            <Input name="price" type="number" step="1" inputMode="numeric" required />
           </div>
           <div>
-            <Label>Hardcover Price (PKR)</Label>
-            <Input name="hardcover_price" type="number" step="1" inputMode="numeric" />
+            <Label>Compare-at price (PKR)</Label>
+            <Input name="compare_at_price" type="number" step="1" inputMode="numeric" />
           </div>
-          <div>
-            <Label>Audiobook Price (PKR)</Label>
-            <Input name="audiobook_price" type="number" step="1" inputMode="numeric" />
-          </div>
+          <TagCheckboxes tags={tags} />
         </div>
         <Button type="submit" className="mt-4" disabled={pending}>
           Add Book
@@ -200,25 +248,27 @@ export function AdminBooksManager({ books }: { books: BookWithFormats[] }) {
               existingUrl={editing.cover_url}
             />
             <div>
-              <Label>Paperback Price (PKR)</Label>
+              <Label>Price (PKR)</Label>
               <Input
-                name="paperback_price"
+                name="price"
                 type="number"
                 step="1"
                 inputMode="numeric"
-                defaultValue={paperback?.price || ""}
+                defaultValue={hardcover?.price || ""}
+                required
               />
             </div>
             <div>
-              <Label>Audiobook Price (PKR)</Label>
+              <Label>Compare-at price (PKR)</Label>
               <Input
-                name="audiobook_price"
+                name="compare_at_price"
                 type="number"
                 step="1"
                 inputMode="numeric"
-                defaultValue={audiobook?.price || ""}
+                defaultValue={hardcover?.compare_at_price || ""}
               />
             </div>
+            <TagCheckboxes key={`tags-${editing.id}`} tags={tags} selected={editing.tags} />
             <div className="md:col-span-2 flex flex-wrap gap-4">
               {BADGE_FIELDS.map((field) => (
                 <label key={field.name} className="flex items-center gap-2 text-sm">
@@ -239,6 +289,39 @@ export function AdminBooksManager({ books }: { books: BookWithFormats[] }) {
         </form>
       )}
 
+      <div className="mb-4 rounded-lg bg-white p-4 shadow-sm">
+        <Label htmlFor="catalog-search">Search catalog</Label>
+        <Input
+          id="catalog-search"
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by title or author to check if a book is already listed…"
+          className="mt-1 max-w-xl"
+        />
+        {normalizedQuery ? (
+          <p className="mt-2 text-sm text-gray-600">
+            {filteredBooks.length > 0 ? (
+              <>
+                <span className="font-medium text-green-700">
+                  {filteredBooks.length} listed
+                </span>
+                {` — matching "${searchQuery.trim()}"`}
+              </>
+            ) : (
+              <>
+                <span className="font-medium text-amber-700">Not listed</span>
+                {` — no book matches "${searchQuery.trim()}"`}
+              </>
+            )}
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-gray-500">
+            {books.length} book{books.length === 1 ? "" : "s"} in catalog
+          </p>
+        )}
+      </div>
+
       <div className="rounded-lg bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
@@ -248,57 +331,72 @@ export function AdminBooksManager({ books }: { books: BookWithFormats[] }) {
               <th className="p-3">Author</th>
               <th className="p-3">Price</th>
               <th className="p-3">Badges</th>
+              <th className="p-3">Tags</th>
               <th className="p-3">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {books.map((book) => {
-              const minPrice = book.formats.length
-                ? Math.min(...book.formats.map((f) => f.price))
-                : 0;
-              const badges = BADGE_FIELDS.filter(
-                (f) => book[f.name as keyof BookWithFormats]
-              ).map((f) => f.label);
-              const coverOk =
-                book.cover_url && !isGoogleDriveShareUrl(book.cover_url)
-                  ? book.cover_url
-                  : null;
-              return (
-                <tr key={book.id} className="border-b">
-                  <td className="p-3">
-                    {coverOk ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={coverOk}
-                        alt=""
-                        className="h-12 w-9 rounded object-cover border bg-gray-100"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-9 items-center justify-center rounded border bg-gray-100 text-[9px] text-gray-400 text-center leading-tight px-0.5">
-                        No cover
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-3 font-medium">{book.title}</td>
-                  <td className="p-3">{book.author_name}</td>
-                  <td className="p-3">{formatPrice(minPrice)}</td>
-                  <td className="p-3 text-xs text-gray-600">{badges.join(", ") || "—"}</td>
-                  <td className="p-3 flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setEditing(book)}>
-                      Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(book.id)}
-                      disabled={pending}
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              );
-            })}
+            {filteredBooks.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="p-6 text-center text-gray-500">
+                  {normalizedQuery
+                    ? "No matching books found. This title/author is not listed yet."
+                    : "No books in the catalog yet."}
+                </td>
+              </tr>
+            ) : (
+              filteredBooks.map((book) => {
+                const minPrice = book.formats.length
+                  ? Math.min(...book.formats.map((f) => f.price))
+                  : 0;
+                const badges = BADGE_FIELDS.filter(
+                  (f) => book[f.name as keyof BookWithFormats]
+                ).map((f) => f.label);
+                const tagNames = (book.tags || [])
+                  .map((slug) => tags.find((t) => t.slug === slug)?.name || slug)
+                  .join(", ");
+                const coverOk =
+                  book.cover_url && !isGoogleDriveShareUrl(book.cover_url)
+                    ? book.cover_url
+                    : null;
+                return (
+                  <tr key={book.id} className="border-b">
+                    <td className="p-3">
+                      {coverOk ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={coverOk}
+                          alt=""
+                          className="h-12 w-9 rounded object-cover border bg-gray-100"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-9 items-center justify-center rounded border bg-gray-100 text-[9px] text-gray-400 text-center leading-tight px-0.5">
+                          No cover
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-3 font-medium">{book.title}</td>
+                    <td className="p-3">{book.author_name}</td>
+                    <td className="p-3">{formatPrice(minPrice)}</td>
+                    <td className="p-3 text-xs text-gray-600">{badges.join(", ") || "—"}</td>
+                    <td className="p-3 text-xs text-gray-600">{tagNames || "—"}</td>
+                    <td className="p-3 flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setEditing(book)}>
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(book.id)}
+                        disabled={pending}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

@@ -1553,6 +1553,27 @@ export type Database = {
           },
         ]
       }
+      store_tags: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       store_books: {
         Row: {
           author_id: string | null
@@ -1563,12 +1584,9 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
-          is_audible_exclusive: boolean
           is_bestseller: boolean
           is_featured: boolean
-          is_first_reads: boolean
           is_new_release: boolean
-          is_prime_eligible: boolean
           isbn: string | null
           language: string | null
           page_count: number | null
@@ -1592,12 +1610,9 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
-          is_audible_exclusive?: boolean
           is_bestseller?: boolean
           is_featured?: boolean
-          is_first_reads?: boolean
           is_new_release?: boolean
-          is_prime_eligible?: boolean
           isbn?: string | null
           language?: string | null
           page_count?: number | null
@@ -1621,12 +1636,9 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
-          is_audible_exclusive?: boolean
           is_bestseller?: boolean
           is_featured?: boolean
-          is_first_reads?: boolean
           is_new_release?: boolean
-          is_prime_eligible?: boolean
           isbn?: string | null
           language?: string | null
           page_count?: number | null

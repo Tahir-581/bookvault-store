@@ -2,19 +2,11 @@ export const SITE_NAME = "Ilfaaz";
 export const SITE_TAB_TITLE = "ilfaaz books store";
 export const SITE_TAGLINE = "Your favourite books, delivered fast";
 
-export const BOOK_FORMATS = ["paperback", "hardcover", "audiobook"] as const;
+export const BOOK_FORMATS = ["hardcover"] as const;
 export type BookFormat = (typeof BOOK_FORMATS)[number];
 
 export const FORMAT_LABELS: Record<BookFormat, string> = {
-  paperback: "Paperback",
   hardcover: "Hardcover",
-  audiobook: "Audible Audiobook",
-};
-
-export const STOREFRONT_FORMAT_LABELS: Record<BookFormat, string> = {
-  paperback: "Paperback",
-  hardcover: "Hardcover",
-  audiobook: "Audible Audiobook",
 };
 
 export const ORDER_STATUSES = [

@@ -96,26 +96,21 @@ export async function createBookAction(formData: FormData) {
   const slug = slugify(title);
   const description = formData.get("description") as string;
 
-  const paperback = parseWholeRupee(formData.get("paperback_price"), {
-    optional: true,
-    field: "Paperback price",
+  const price = parseWholeRupee(formData.get("price"), {
+    field: "Price",
   });
-  if (paperback.error) return { error: paperback.error };
+  if (price.error) return { error: price.error };
 
-  const hardcover = parseWholeRupee(formData.get("hardcover_price"), {
+  const compareAt = parseWholeRupee(formData.get("compare_at_price"), {
     optional: true,
-    field: "Hardcover price",
+    field: "Compare-at price",
   });
-  if (hardcover.error) return { error: hardcover.error };
-
-  const audiobook = parseWholeRupee(formData.get("audiobook_price"), {
-    optional: true,
-    field: "Audiobook price",
-  });
-  if (audiobook.error) return { error: audiobook.error };
+  if (compareAt.error) return { error: compareAt.error };
 
   const cover = await resolveCoverUrl(formData, slug);
   if (cover.error) return { error: cover.error };
+
+  const tags = formData.getAll("tags").map(String).filter(Boolean);
 
   const { data: book, error } = await supabase
     .from("store_books")
@@ -125,6 +120,7 @@ export async function createBookAction(formData: FormData) {
       author_name: authorName,
       description,
       cover_url: cover.url,
+      tags,
       is_active: true,
     })
     .select()
@@ -132,32 +128,13 @@ export async function createBookAction(formData: FormData) {
 
   if (error || !book) return { error: error?.message || "Failed" };
 
-  const formats = [];
-  if (paperback.value) {
-    formats.push({
-      book_id: book.id,
-      format: "paperback",
-      price: paperback.value,
-      stock: 100,
-    });
-  }
-  if (hardcover.value) {
-    formats.push({
-      book_id: book.id,
-      format: "hardcover",
-      price: hardcover.value,
-      stock: 50,
-    });
-  }
-  if (audiobook.value) {
-    formats.push({
-      book_id: book.id,
-      format: "audiobook",
-      price: audiobook.value,
-      stock: 999,
-    });
-  }
-  if (formats.length) await supabase.from("store_book_formats").insert(formats);
+  await supabase.from("store_book_formats").insert({
+    book_id: book.id,
+    format: "hardcover",
+    price: price.value ?? 0,
+    compare_at_price: compareAt.value ?? null,
+    stock: 100,
+  });
 
   await logAdminAction("create_book", "book", book.id, { title });
   revalidatePath("/admin/books");
@@ -242,6 +219,46 @@ export async function createCategoryAction(formData: FormData) {
     is_active: true,
   });
   revalidatePath("/admin/categories");
+  return { success: true };
+}
+
+export async function createTagAction(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  const name = (formData.get("name") as string)?.trim();
+  if (!name) return { error: "Tag name is required" };
+  const slug = slugify(name);
+  const { error } = await supabase.from("store_tags").insert({ name, slug });
+  if (error) return { error: error.message };
+  revalidatePath("/admin/tags");
+  revalidatePath("/admin/books");
+  return { success: true };
+}
+
+export async function deleteTagAction(tagId: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  const { data: tag } = await supabase
+    .from("store_tags")
+    .select("slug")
+    .eq("id", tagId)
+    .maybeSingle();
+
+  if (tag?.slug) {
+    const { data: books } = await supabase
+      .from("store_books")
+      .select("id, tags")
+      .contains("tags", [tag.slug]);
+    for (const book of books || []) {
+      const next = (book.tags || []).filter((t: string) => t !== tag.slug);
+      await supabase.from("store_books").update({ tags: next }).eq("id", book.id);
+    }
+  }
+
+  await supabase.from("store_tags").delete().eq("id", tagId);
+  revalidatePath("/admin/tags");
+  revalidatePath("/admin/books");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -338,11 +355,20 @@ export async function createDealAction(formData: FormData) {
   if (dealPrice.error) return { error: dealPrice.error };
 
   const supabase = await createServiceClient();
+  const bookId = formData.get("book_id") as string;
   const startsAt = formData.get("starts_at") as string;
   const endsAt = formData.get("ends_at") as string;
+
+  const { data: format } = await supabase
+    .from("store_book_formats")
+    .select("id")
+    .eq("book_id", bookId)
+    .eq("format", "hardcover")
+    .maybeSingle();
+
   await supabase.from("store_deals").insert({
-    book_id: formData.get("book_id") as string,
-    format_id: (formData.get("format_id") as string) || null,
+    book_id: bookId,
+    format_id: format?.id || null,
     deal_price: dealPrice.value ?? 0,
     starts_at: new Date(startsAt).toISOString(),
     ends_at: new Date(endsAt).toISOString(),
@@ -385,17 +411,17 @@ export async function updateBookBadgesAction(bookId: string, badges: Record<stri
 export async function updateBookAction(bookId: string, formData: FormData) {
   await requireAdmin();
   const supabase = await createServiceClient();
-  const paperback = parseWholeRupee(formData.get("paperback_price"), {
+  const price = parseWholeRupee(formData.get("price"), {
     optional: true,
-    field: "Paperback price",
+    field: "Price",
   });
-  if (paperback.error) return { error: paperback.error };
+  if (price.error) return { error: price.error };
 
-  const audiobook = parseWholeRupee(formData.get("audiobook_price"), {
+  const compareAt = parseWholeRupee(formData.get("compare_at_price"), {
     optional: true,
-    field: "Audiobook price",
+    field: "Compare-at price",
   });
-  if (audiobook.error) return { error: audiobook.error };
+  if (compareAt.error) return { error: compareAt.error };
 
   const title = formData.get("title") as string;
   const slugBase = slugify(title) || bookId;
@@ -412,48 +438,54 @@ export async function updateBookAction(bookId: string, formData: FormData) {
       ? { cover_url: cover.url }
       : {};
 
+  const tags = formData.getAll("tags").map(String).filter(Boolean);
+
   await supabase
     .from("store_books")
     .update({
       title,
       author_name: formData.get("author_name") as string,
       ...coverUpdate,
+      tags,
       is_bestseller: formData.get("is_bestseller") === "on",
       is_new_release: formData.get("is_new_release") === "on",
       is_featured: formData.get("is_featured") === "on",
-      is_prime_eligible: formData.get("is_prime_eligible") === "on",
-      is_first_reads: formData.get("is_first_reads") === "on",
-      is_audible_exclusive: formData.get("is_audible_exclusive") === "on",
     })
     .eq("id", bookId);
 
-  if (paperback.value != null) {
-    await supabase
-      .from("store_book_formats")
-      .update({ price: paperback.value })
-      .eq("book_id", bookId)
-      .eq("format", "paperback");
-  }
-  if (audiobook.value != null) {
+  if (price.value != null) {
     const { data: existing } = await supabase
       .from("store_book_formats")
       .select("id")
       .eq("book_id", bookId)
-      .eq("format", "audiobook")
+      .eq("format", "hardcover")
       .maybeSingle();
+
+    const formatPatch = {
+      price: price.value,
+      ...(compareAt.value != null ? { compare_at_price: compareAt.value } : {}),
+    };
+
     if (existing) {
       await supabase
         .from("store_book_formats")
-        .update({ price: audiobook.value })
+        .update(formatPatch)
         .eq("id", existing.id);
     } else {
       await supabase.from("store_book_formats").insert({
         book_id: bookId,
-        format: "audiobook",
-        price: audiobook.value,
-        stock: 999,
+        format: "hardcover",
+        price: price.value,
+        compare_at_price: compareAt.value ?? null,
+        stock: 100,
       });
     }
+  } else if (compareAt.value != null) {
+    await supabase
+      .from("store_book_formats")
+      .update({ compare_at_price: compareAt.value })
+      .eq("book_id", bookId)
+      .eq("format", "hardcover");
   }
 
   revalidatePath("/admin/books");

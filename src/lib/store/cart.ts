@@ -21,12 +21,6 @@ type CartState = {
   addItem: (item: Omit<CartItem, "id">) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
-  updateFormat: (
-    id: string,
-    format: BookFormat,
-    formatId: string,
-    unitPrice: number
-  ) => void;
   clearCart: () => void;
   totalItems: () => number;
   subtotal: () => number;
@@ -37,9 +31,7 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       addItem: (item) => {
-        const existing = get().items.find(
-          (i) => i.bookId === item.bookId && i.format === item.format
-        );
+        const existing = get().items.find((i) => i.bookId === item.bookId);
         if (existing) {
           set({
             items: get().items.map((i) =>
@@ -62,17 +54,11 @@ export const useCartStore = create<CartState>()(
             i.id === id ? { ...i, quantity: Math.max(1, quantity) } : i
           ),
         })),
-      updateFormat: (id, format, formatId, unitPrice) =>
-        set((state) => ({
-          items: state.items.map((i) =>
-            i.id === id ? { ...i, format, formatId, unitPrice } : i
-          ),
-        })),
       clearCart: () => set({ items: [] }),
       totalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
       subtotal: () =>
         get().items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
     }),
-    { name: "ilfaaz-cart" }
+    { name: "ilfaaz-cart-v2" }
   )
 );

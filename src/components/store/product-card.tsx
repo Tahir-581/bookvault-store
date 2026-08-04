@@ -3,8 +3,6 @@ import { StarRating } from "@/components/store/star-rating";
 import { Badge } from "@/components/ui/badge";
 import { CoverImage } from "@/components/store/cover-image";
 import { DealCountdown } from "@/components/store/deal-countdown";
-import { AudibleRibbon, ServiceBadges } from "@/components/store/service-badges";
-import { STOREFRONT_FORMAT_LABELS } from "@/lib/constants";
 import { cn, formatAmazonPrice, formatPrice } from "@/lib/utils";
 import type { BookFormatRow, BookWithFormats } from "@/lib/types";
 
@@ -13,19 +11,15 @@ type DealInfo = { deal_price: number; ends_at: string; list_price?: number };
 export function ProductCard({
   book,
   variant = "default",
-  displayFormat,
-  preferredFormat,
   deal,
   className,
 }: {
   book: BookWithFormats;
   variant?: "default" | "storefront";
-  displayFormat?: string;
-  preferredFormat?: string;
   deal?: DealInfo;
   className?: string;
 }) {
-  const formatRow = pickFormat(book, preferredFormat);
+  const formatRow = book.formats[0] as BookFormatRow | undefined;
   const lowestPrice = formatRow?.price ?? (book.formats.length
     ? Math.min(...book.formats.map((f) => f.price))
     : 0);
@@ -35,15 +29,12 @@ export function ProductCard({
     book.formats.find((f) => f.compare_at_price)?.compare_at_price;
   const price = deal ? deal.deal_price : lowestPrice;
   const cover = book.cover_url || "/placeholder-book.svg";
-  const formatLabel =
-    displayFormat ||
-    (formatRow
-      ? STOREFRONT_FORMAT_LABELS[formatRow.format as keyof typeof STOREFRONT_FORMAT_LABELS]
-      : undefined);
+  const tagLabels = book.tag_labels?.length
+    ? book.tag_labels
+    : book.tags || [];
 
   if (variant === "storefront") {
     const amazonPrice = formatAmazonPrice(price);
-    const showAudibleRibbon = book.is_audible_exclusive || formatRow?.format === "audiobook";
     const discountPct =
       comparePrice && comparePrice > price
         ? Math.round(((comparePrice - price) / comparePrice) * 100)
@@ -64,7 +55,6 @@ export function ProductCard({
             className="object-contain p-0.5 transition-transform duration-300 group-hover:scale-110"
             sizes="170px"
           />
-          {showAudibleRibbon && <AudibleRibbon />}
         </div>
         <h3 className="mt-1 line-clamp-2 text-sm leading-snug text-foreground group-hover:text-link-hover">
           {book.title}
@@ -82,19 +72,16 @@ export function ProductCard({
             showCount={true}
           />
         </div>
-        <div className="mt-1 min-h-[32px]">
-          <ServiceBadges book={book} />
-          {formatLabel && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{formatLabel}</p>
-          )}
-        </div>
-        <div className="mt-1 min-h-[28px]">
-          {deal ? <DealCountdown endsAt={deal.ends_at} /> : null}
-        </div>
+        {tagLabels.length > 0 && (
+          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+            {tagLabels.join(" · ")}
+          </p>
+        )}
+        {deal ? <DealCountdown endsAt={deal.ends_at} /> : null}
         {discountPct !== null && discountPct > 0 && (
           <p className="mt-0.5 text-sm font-medium text-deal">-{discountPct}%</p>
         )}
-        <div className="mt-1 flex items-start text-foreground">
+        <div className="mt-0.5 flex items-start text-foreground">
           <span className="text-xs">{amazonPrice.symbol}</span>
           <span className="text-xl font-medium leading-none">{amazonPrice.whole}</span>
           {amazonPrice.fraction ? (
@@ -153,17 +140,4 @@ export function ProductCard({
       )}
     </Link>
   );
-}
-
-function pickFormat(book: BookWithFormats, preferred?: string): BookFormatRow | undefined {
-  if (preferred === "print") {
-    return (
-      book.formats.find((f) => f.format === "paperback") ||
-      book.formats.find((f) => f.format === "hardcover")
-    );
-  }
-  if (preferred) {
-    return book.formats.find((f) => f.format === preferred);
-  }
-  return book.formats[0];
 }

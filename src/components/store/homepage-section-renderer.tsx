@@ -1,19 +1,12 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { ProductCard } from "@/components/store/product-card";
 import { ProductShelf } from "@/components/store/product-shelf";
-import { FormatFilterPills } from "@/components/store/format-filter-pills";
 import {
   resolveSectionBooks,
   resolveSectionDeals,
   getCategories,
 } from "@/lib/data/books";
 import type { HomepageSection, HomepageSectionConfig } from "@/lib/types";
-
-const DEFAULT_PILLS = [
-  { label: "Print Books", href: "/books?format=print" },
-  { label: "Audible Audiobooks", href: "/books?format=audiobook" },
-];
 
 export async function HomepageSectionRenderer({
   sections,
@@ -51,14 +44,7 @@ async function SectionBlock({
 
   switch (section.section_type) {
     case "filter_pills":
-      return (
-        <Suspense fallback={null}>
-          <FormatFilterPills
-            pills={config.pills || DEFAULT_PILLS}
-            showClear
-          />
-        </Suspense>
-      );
+      return null;
 
     case "category_tiles":
       return (
@@ -120,7 +106,6 @@ async function SectionBlock({
             title={section.title || "Today's Deals"}
             seeMoreHref={config.see_more_href || "/deals"}
             books={books}
-            config={config}
           />
         );
       }
@@ -134,7 +119,6 @@ async function SectionBlock({
               key={deal.id}
               book={deal.book}
               variant="storefront"
-              preferredFormat={config.format}
               deal={{ deal_price: deal.deal_price, ends_at: deal.ends_at }}
             />
           ))}
@@ -149,7 +133,6 @@ async function SectionBlock({
           title={section.title || "Books"}
           seeMoreHref={config.see_more_href}
           books={books}
-          config={config}
         />
       );
   }
@@ -159,24 +142,18 @@ function BookRowShelf({
   title,
   seeMoreHref,
   books,
-  config,
 }: {
   title: string;
   seeMoreHref?: string;
   books: Awaited<ReturnType<typeof resolveSectionBooks>>;
-  config: HomepageSectionConfig;
+  config?: HomepageSectionConfig;
 }) {
   if (books.length === 0) return null;
 
   return (
     <ProductShelf title={title} seeMoreHref={seeMoreHref}>
       {books.map((book) => (
-        <ProductCard
-          key={book.id}
-          book={book}
-          variant="storefront"
-          preferredFormat={config.format}
-        />
+        <ProductCard key={book.id} book={book} variant="storefront" />
       ))}
     </ProductShelf>
   );

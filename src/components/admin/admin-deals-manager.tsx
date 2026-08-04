@@ -79,19 +79,6 @@ export function AdminDealsManager({
             </select>
           </div>
           <div>
-            <Label>Format</Label>
-            <select name="format_id" className="w-full rounded border px-3 py-2">
-              <option value="">Any</option>
-              {books.flatMap((b) =>
-                b.formats.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {b.title} — {f.format}
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
-          <div>
             <Label>Deal price (PKR)</Label>
             <Input name="deal_price" type="number" step="1" inputMode="numeric" required />
           </div>

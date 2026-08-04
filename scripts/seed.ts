@@ -59,15 +59,13 @@ async function seed() {
         is_bestseller: book.bestseller || false,
         is_new_release: book.newRelease || false,
         is_featured: book.featured || book.bestseller || false,
-        is_prime_eligible: book.prime || false,
-        is_first_reads: book.firstReads || false,
-        is_audible_exclusive: book.audibleExclusive || false,
         avg_rating: 3.5 + Math.random() * 1.5,
         review_count: Math.floor(Math.random() * 5000) + 100,
         is_active: true,
         publisher: "Ilfaaz Publishing",
         page_count: 250 + Math.floor(Math.random() * 300),
         language: "English",
+        tags: [],
       })
       .select("id")
       .single();
@@ -78,11 +76,13 @@ async function seed() {
     }
 
     await supabase.from("store_book_formats").insert([
-      { book_id: inserted.id, format: "paperback", price: book.price, compare_at_price: book.price * 1.2, stock: 100 },
-      { book_id: inserted.id, format: "hardcover", price: book.price + 8, compare_at_price: (book.price + 8) * 1.15, stock: 50 },
-      ...(book.audiobook
-        ? [{ book_id: inserted.id, format: "audiobook", price: book.price + 4, compare_at_price: (book.price + 4) * 1.1, stock: 999 }]
-        : []),
+      {
+        book_id: inserted.id,
+        format: "hardcover",
+        price: book.price,
+        compare_at_price: Math.round(book.price * 1.2),
+        stock: 100,
+      },
     ]);
 
     const catId = categoryMap.get(book.category);
@@ -97,71 +97,22 @@ async function seed() {
   }
   console.log(`Books seeded: ${bookCount}`);
 
-  // Add audiobook formats to existing bestsellers without one
-  const { data: allBestsellers } = await supabase
-    .from("store_books")
-    .select("id, title")
-    .eq("is_bestseller", true)
-    .eq("is_active", true)
-    .limit(25);
-
-  if (allBestsellers?.length) {
-    for (const book of allBestsellers) {
-      const { data: hasAudio } = await supabase
-        .from("store_book_formats")
-        .select("id")
-        .eq("book_id", book.id)
-        .eq("format", "audiobook")
-        .maybeSingle();
-      if (hasAudio) continue;
-
-      const { data: paperback } = await supabase
-        .from("store_book_formats")
-        .select("price")
-        .eq("book_id", book.id)
-        .eq("format", "paperback")
-        .maybeSingle();
-      if (!paperback) continue;
-
-      await supabase.from("store_book_formats").insert({
-        book_id: book.id,
-        format: "audiobook",
-        price: Number(paperback.price) + 4,
-        compare_at_price: Number(paperback.price) + 6,
-        stock: 999,
-      });
-    }
-    console.log("Audiobook formats added to bestsellers");
-  }
-
-  // Badge enrichment on existing books
-  const badgeUpdates = [
-    { match: "Midnight Library", prime: true },
-    { match: "Atomic Habits", prime: true },
-    { match: "Project Hail Mary", prime: true },
-    { match: "Harry Potter", prime: true, audible: true },
-    { match: "Silent Patient", firstReads: true },
-    { match: "Day Break", prime: true },
-    { match: "Seed", firstReads: true, featured: true },
+  // Featured enrichment on existing books
+  const featuredUpdates = [
+    { match: "Seed", featured: true },
+    { match: "Jane Austen", featured: true },
   ];
-  for (const u of badgeUpdates) {
+  for (const u of featuredUpdates) {
     const { data: matches } = await supabase
       .from("store_books")
       .select("id")
       .ilike("title", `%${u.match}%`);
     for (const m of matches || []) {
-      const patch: Record<string, boolean> = {};
-      if (u.prime) patch.is_prime_eligible = true;
-      if (u.firstReads) patch.is_first_reads = true;
-      if (u.audible) patch.is_audible_exclusive = true;
-      if (u.featured) patch.is_featured = true;
-      if (Object.keys(patch).length) {
-        await supabase.from("store_books").update(patch).eq("id", m.id);
-      }
+      await supabase.from("store_books").update({ is_featured: true }).eq("id", m.id);
     }
   }
 
-  // Lightning deals on random bestsellers
+  // Lightning deals on bestsellers (hardcover only)
   const { data: bestsellers } = await supabase
     .from("store_books")
     .select("id, title")
@@ -179,7 +130,7 @@ async function seed() {
         .from("store_book_formats")
         .select("id, price")
         .eq("book_id", book.id)
-        .eq("format", "paperback")
+        .eq("format", "hardcover")
         .maybeSingle();
       if (!format) continue;
 
@@ -190,7 +141,7 @@ async function seed() {
         .maybeSingle();
       if (existingDeal) continue;
 
-      const dealPrice = Math.round(Number(format.price) * 0.75 * 100) / 100;
+      const dealPrice = Math.round(Number(format.price) * 0.75);
       await supabase.from("store_deals").insert({
         book_id: book.id,
         format_id: format.id,
@@ -223,65 +174,39 @@ async function seed() {
 
   const homepageSections = [
     {
-      section_type: "filter_pills",
-      title: "Filter by",
+      section_type: "book_row",
+      title: "Best sellers",
       subtitle: null,
-      config: {
-        pills: [
-          { label: "Print Books", href: "/books?format=print" },
-          { label: "Audible Audiobooks", href: "/books?format=audiobook" },
-        ],
-      },
+      config: { filter: "bestseller", limit: 12, see_more_href: "/books?sort=bestseller" },
       sort_order: 1,
     },
     {
       section_type: "book_row",
-      title: "Best sellers in print",
+      title: "New releases",
       subtitle: null,
-      config: { filter: "bestseller", format: "print", limit: 12, see_more_href: "/books?format=print&sort=bestseller" },
+      config: { filter: "new_release", limit: 12, see_more_href: "/books?sort=newest" },
       sort_order: 2,
-    },
-    {
-      section_type: "book_row",
-      title: "New releases in print",
-      subtitle: null,
-      config: { filter: "new_release", format: "print", limit: 12, see_more_href: "/books?format=print&sort=newest" },
-      sort_order: 3,
     },
     {
       section_type: "carousel",
       title: "Today's Deals",
       subtitle: "Limited-time savings",
       config: { source: "deals", limit: 12, see_more_href: "/deals" },
-      sort_order: 4,
+      sort_order: 3,
     },
     {
       section_type: "book_row",
-      title: "Best sellers in Original books",
+      title: "Featured picks",
       subtitle: null,
       config: { filter: "featured", limit: 12, see_more_href: "/books?sort=bestseller" },
-      sort_order: 5,
-    },
-    {
-      section_type: "book_row",
-      title: "Best sellers on Audible",
-      subtitle: null,
-      config: { filter: "bestseller", format: "audiobook", limit: 12, see_more_href: "/books?format=audiobook&sort=bestseller" },
-      sort_order: 6,
-    },
-    {
-      section_type: "book_row",
-      title: "Most popular listens",
-      subtitle: null,
-      config: { format: "audiobook", limit: 12, see_more_href: "/books?format=audiobook" },
-      sort_order: 7,
+      sort_order: 4,
     },
     {
       section_type: "editorial",
       title: "Why Ilfaaz?",
       subtitle: "Millions of titles, fast delivery, easy returns",
       config: { cta: { label: "Browse all books", href: "/books" } },
-      sort_order: 8,
+      sort_order: 5,
     },
   ];
 

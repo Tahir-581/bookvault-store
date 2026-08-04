@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { CoverImage } from "@/components/store/cover-image";
 import { Button } from "@/components/ui/button";
-import { FORMAT_LABELS } from "@/lib/constants";
 import { useCartStore } from "@/lib/store/cart";
 import { formatPrice } from "@/lib/utils";
 
@@ -58,9 +57,6 @@ export default function CartPage() {
                     {item.title}
                   </Link>
                   <p className="text-sm text-success">In Stock</p>
-                  <p className="text-xs text-gray-500">
-                    {FORMAT_LABELS[item.format]}
-                  </p>
                   <div className="mt-2 flex items-center gap-3">
                     <div className="flex items-center rounded border border-gray-300">
                       <button

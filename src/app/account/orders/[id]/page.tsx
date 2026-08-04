@@ -40,7 +40,7 @@ export default async function OrderDetailPage({
             <div key={item.id} className="flex justify-between border-b py-2 last:border-0">
               <div>
                 <p className="font-medium">{item.title}</p>
-                <p className="text-sm text-gray-500">{item.author} — {item.format}</p>
+                <p className="text-sm text-gray-500">{item.author}</p>
               </div>
               <p>{formatPrice(item.unit_price * item.quantity)}</p>
             </div>

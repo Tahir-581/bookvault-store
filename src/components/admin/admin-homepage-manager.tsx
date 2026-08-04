@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import type { HomepageSection } from "@/lib/types";
 
 const SECTION_TYPES = [
-  "filter_pills",
   "book_row",
   "carousel",
   "category_tiles",
@@ -42,7 +41,6 @@ export function AdminHomepageManager({ sections }: { sections: HomepageSection[]
     startTransition(async () => {
       const config = {
         filter: formData.get("filter") as string || undefined,
-        format: formData.get("format") as string || undefined,
         limit: Number(formData.get("limit")) || 12,
         see_more_href: formData.get("see_more_href") as string || undefined,
       };
@@ -58,7 +56,6 @@ export function AdminHomepageManager({ sections }: { sections: HomepageSection[]
     startTransition(async () => {
       const config = {
         filter: formData.get("filter") as string || undefined,
-        format: formData.get("format") as string || undefined,
         limit: Number(formData.get("limit")) || 12,
         see_more_href: formData.get("see_more_href") as string || undefined,
         source: formData.get("source") as string || undefined,
@@ -191,16 +188,6 @@ function SectionFields({ section }: { section?: HomepageSection }) {
           <option value="new_release">new_release</option>
           <option value="featured">featured</option>
           <option value="deals">deals</option>
-        </select>
-      </div>
-      <div>
-        <Label>Format</Label>
-        <select name="format" className="w-full rounded border px-3 py-2" defaultValue={config.format || ""}>
-          <option value="">—</option>
-          <option value="print">print</option>
-          <option value="paperback">paperback</option>
-          <option value="hardcover">hardcover</option>
-          <option value="audiobook">audiobook</option>
         </select>
       </div>
       <div>

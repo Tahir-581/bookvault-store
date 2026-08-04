@@ -1,11 +1,10 @@
-import type { HomepageSectionConfig } from "@/lib/types";
+import type { HomepageSectionConfig, Tag } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
 import type { BookWithFormats, DealWithBook } from "@/lib/types";
 
 export type BookFilters = {
   q?: string;
   category?: string;
-  format?: string;
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
@@ -21,6 +20,31 @@ function hasSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
+}
+
+async function getTagMap(): Promise<Map<string, string>> {
+  const tags = await getTags();
+  return new Map(tags.map((t) => [t.slug, t.name]));
+}
+
+function withTagLabels(
+  book: BookWithFormats,
+  tagMap: Map<string, string>
+): BookWithFormats {
+  return {
+    ...book,
+    tag_labels: (book.tags || []).map((slug) => tagMap.get(slug) || slug),
+  };
+}
+
+export async function getTags(): Promise<Tag[]> {
+  if (!hasSupabase()) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("store_tags")
+    .select("id, name, slug, created_at")
+    .order("name");
+  return (data || []) as Tag[];
 }
 
 export async function getBooks(filters: BookFilters = {}) {
@@ -75,19 +99,16 @@ export async function getBooks(filters: BookFilters = {}) {
   const { data, count, error } = await query.range(from, to);
   if (error) throw error;
 
-  let books = (data || []).map((book) => ({
-    ...book,
-    formats: book.store_book_formats?.filter((f) => f.is_active) || [],
-  })) as BookWithFormats[];
-
-  if (filters.format) {
-    books = books.filter((b) => {
-      if (filters.format === "print") {
-        return b.formats.some((f) => f.format === "paperback" || f.format === "hardcover");
-      }
-      return b.formats.some((f) => f.format === filters.format);
-    });
-  }
+  const tagMap = await getTagMap();
+  let books = (data || []).map((book) =>
+    withTagLabels(
+      {
+        ...book,
+        formats: book.store_book_formats?.filter((f) => f.is_active) || [],
+      } as BookWithFormats,
+      tagMap
+    )
+  );
 
   if (filters.minPrice || filters.maxPrice) {
     books = books.filter((b) => {
@@ -116,16 +137,23 @@ export async function getBookBySlug(slug: string) {
   if (error) throw error;
   if (!data) return null;
 
-  return {
-    ...data,
-    formats: data.store_book_formats?.filter((f) => f.is_active) || [],
-    images: data.store_book_images || [],
-    categories:
-      data.store_book_categories?.map(
-        (bc: { store_categories: { id: string; name: string; slug: string } }) =>
-          bc.store_categories
-      ) || [],
-  };
+  const tagMap = await getTagMap();
+  return withTagLabels(
+    {
+      ...data,
+      formats: data.store_book_formats?.filter((f) => f.is_active) || [],
+      images: data.store_book_images || [],
+      categories:
+        data.store_book_categories?.map(
+          (bc: { store_categories: { id: string; name: string; slug: string } }) =>
+            bc.store_categories
+        ) || [],
+    } as BookWithFormats & {
+      images?: { url: string; alt: string | null }[];
+      categories?: { id: string; name: string; slug: string }[];
+    },
+    tagMap
+  );
 }
 
 export async function getFeaturedBooks(limit = 12) {
@@ -169,16 +197,7 @@ export async function getRelatedBooks(bookId: string, categoryIds: string[], lim
   const ids = [...new Set((data || []).map((d) => d.book_id))].slice(0, limit);
   if (ids.length === 0) return [];
 
-  const { data: books } = await supabase
-    .from("store_books")
-    .select("*, store_book_formats(*)")
-    .in("id", ids)
-    .eq("is_active", true);
-
-  return (books || []).map((book) => ({
-    ...book,
-    formats: (book.store_book_formats?.filter((f) => f.is_active) || []) as BookWithFormats["formats"],
-  })) as BookWithFormats[];
+  return getBooksByIds(ids);
 }
 
 export async function getBookReviews(bookId: string) {
@@ -215,33 +234,19 @@ export async function getCategoryBySlug(slug: string) {
   return data;
 }
 
-function mapBookRow(book: Record<string, unknown>): BookWithFormats {
-  return {
-    ...book,
-    formats: ((book.store_book_formats as BookWithFormats["formats"]) || []).filter(
-      (f) => f.is_active
-    ),
-  } as BookWithFormats;
-}
-
-function filterByFormat(books: BookWithFormats[], format?: string) {
-  if (!format) return books;
-  if (format === "print") {
-    return books.filter((b) =>
-      b.formats.some((f) => f.format === "paperback" || f.format === "hardcover")
-    );
-  }
-  return books.filter((b) => b.formats.some((f) => f.format === format));
-}
-
-function pickDisplayFormat(book: BookWithFormats, preferred?: string) {
-  if (preferred === "print") {
-    return book.formats.find((f) => f.format === "paperback") || book.formats.find((f) => f.format === "hardcover");
-  }
-  if (preferred) {
-    return book.formats.find((f) => f.format === preferred);
-  }
-  return book.formats[0];
+function mapBookRow(
+  book: Record<string, unknown>,
+  tagMap: Map<string, string>
+): BookWithFormats {
+  return withTagLabels(
+    {
+      ...book,
+      formats: ((book.store_book_formats as BookWithFormats["formats"]) || []).filter(
+        (f) => f.is_active
+      ),
+    } as BookWithFormats,
+    tagMap
+  );
 }
 
 export async function getBooksByIds(ids: string[]) {
@@ -252,12 +257,13 @@ export async function getBooksByIds(ids: string[]) {
     .select("*, store_book_formats(*)")
     .in("id", ids)
     .eq("is_active", true);
-  const books = (data || []).map((b) => mapBookRow(b as Record<string, unknown>));
+  const tagMap = await getTagMap();
+  const books = (data || []).map((b) => mapBookRow(b as Record<string, unknown>, tagMap));
   const orderMap = new Map(ids.map((id, i) => [id, i]));
   return books.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
 }
 
-export async function getBooksByCategory(slug: string, limit = 12, format?: string) {
+export async function getBooksByCategory(slug: string, limit = 12) {
   if (!hasSupabase()) return [];
   const supabase = await createClient();
   const category = await getCategoryBySlug(slug);
@@ -273,7 +279,7 @@ export async function getBooksByCategory(slug: string, limit = 12, format?: stri
   if (ids.length === 0) return [];
 
   const books = await getBooksByIds(ids.slice(0, limit * 2));
-  return filterByFormat(books, format).slice(0, limit);
+  return books.slice(0, limit);
 }
 
 export async function getActiveDealsWithBooks(limit = 12): Promise<DealWithBook[]> {
@@ -288,9 +294,10 @@ export async function getActiveDealsWithBooks(limit = 12): Promise<DealWithBook[
     .gte("ends_at", now)
     .limit(limit);
 
+  const tagMap = await getTagMap();
   return (data || []).map((deal) => {
     const raw = deal.store_books as Record<string, unknown>;
-    const book = mapBookRow(raw);
+    const book = mapBookRow(raw, tagMap);
     return {
       id: deal.id,
       book_id: deal.book_id,
@@ -306,11 +313,10 @@ export async function getActiveDealsWithBooks(limit = 12): Promise<DealWithBook[
 
 export async function resolveSectionBooks(config: HomepageSectionConfig) {
   const limit = config.limit ?? 12;
-  const format = config.format;
 
   if (config.book_ids?.length) {
     const books = await getBooksByIds(config.book_ids);
-    return filterByFormat(books, format).slice(0, limit);
+    return books.slice(0, limit);
   }
 
   if (config.filter === "deals" || config.source === "deals") {
@@ -319,7 +325,7 @@ export async function resolveSectionBooks(config: HomepageSectionConfig) {
   }
 
   if (config.category) {
-    return getBooksByCategory(config.category, limit, format);
+    return getBooksByCategory(config.category, limit);
   }
 
   let sort: string | undefined;
@@ -352,12 +358,10 @@ export async function resolveSectionBooks(config: HomepageSectionConfig) {
     }
   }
 
-  return filterByFormat(filtered, format).slice(0, limit);
+  return filtered.slice(0, limit);
 }
 
 export async function resolveSectionDeals(config: HomepageSectionConfig) {
   const limit = config.limit ?? 12;
   return getActiveDealsWithBooks(limit);
 }
-
-export { pickDisplayFormat };
