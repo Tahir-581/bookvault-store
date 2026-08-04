@@ -60,7 +60,7 @@ export function StoreHeader({
               href="/"
               className="flex min-w-0 flex-1 items-center justify-center gap-2 text-white hover:text-white"
             >
-              <IlfaazMark className="-ml-1.5 h-10 w-auto shrink-0" />
+              <IlfaazMark className="-ml-4 h-10 w-auto shrink-0" />
               <span className="truncate text-2xl font-bold">{siteName}</span>
             </Link>
             <Link
@@ -121,7 +121,7 @@ export function StoreHeader({
               href="/"
               className="flex max-w-[28vw] shrink-0 items-center gap-2 text-white hover:text-white sm:max-w-none"
             >
-              <IlfaazMark className="-ml-1.5 h-11 w-auto shrink-0" />
+              <IlfaazMark className="-ml-4 h-11 w-auto shrink-0" />
               <span className="truncate text-xl font-bold">{siteName}</span>
             </Link>
 
