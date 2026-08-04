@@ -30,6 +30,7 @@ export type Book = {
   title: string;
   slug: string;
   description: string | null;
+  seo_description?: string | null;
   isbn: string | null;
   publisher: string | null;
   publication_date: string | null;
