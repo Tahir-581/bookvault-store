@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  Tags,
   ArrowLeft,
   BookOpen,
   ChevronLeft,
@@ -14,22 +13,17 @@ import {
   Package,
   Percent,
   Settings,
-  Tag,
   Users,
-  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/books", label: "Catalog", icon: BookOpen },
-  { href: "/admin/categories", label: "Categories", icon: Tag },
-  { href: "/admin/tags", label: "Tags", icon: Tags },
   { href: "/admin/orders", label: "Orders", icon: Package },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquare },
   { href: "/admin/coupons", label: "Coupons", icon: Percent },
-  { href: "/admin/deals", label: "Deals", icon: Zap },
   { href: "/admin/content", label: "Content CMS", icon: FileText },
   { href: "/admin/settings", label: "Site Settings", icon: Settings },
 ];

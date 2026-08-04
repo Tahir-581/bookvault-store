@@ -7,6 +7,7 @@ import {
   getBookReviews,
   getRelatedBooks,
 } from "@/lib/data/books";
+import { getEffectivePrice } from "@/lib/pricing";
 import type { BookWithFormats } from "@/lib/types";
 
 export default async function ProductPage({
@@ -37,13 +38,16 @@ export default async function ProductPage({
       ratingValue: book.avg_rating,
       reviewCount: book.review_count,
     } : undefined,
-    offers: book.formats.map((f) => ({
-      "@type": "Offer",
-      price: f.price,
-      priceCurrency: "PKR",
-      availability: f.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/NewCondition",
-    })),
+    offers: book.formats.map((f) => {
+      const pricing = getEffectivePrice(f);
+      return {
+        "@type": "Offer",
+        price: pricing.displayPrice,
+        priceCurrency: "PKR",
+        availability: f.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        itemCondition: "https://schema.org/NewCondition",
+      };
+    }),
   };
 
   return (

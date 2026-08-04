@@ -59,6 +59,122 @@ async function resolveCoverUrl(
   return { url: null };
 }
 
+type ServiceClient = Awaited<ReturnType<typeof createServiceClient>>;
+
+function parseSaleFields(formData: FormData, regularPrice: number) {
+  const onSale = formData.get("on_sale") === "on";
+  if (!onSale) {
+    return {
+      onSale: false,
+      salePercent: null as number | null,
+      saleStartsAt: null as string | null,
+      saleEndsAt: null as string | null,
+      compareAt: null as number | null,
+    };
+  }
+
+  const percentRaw = ((formData.get("sale_percent") as string) || "").trim();
+  const percent = Number(percentRaw);
+  if (!percentRaw || !Number.isInteger(percent) || percent < 1 || percent > 99) {
+    return { error: "Sale percent must be a whole number from 1 to 99" };
+  }
+
+  const startsRaw = ((formData.get("sale_starts_at") as string) || "").trim();
+  const endsRaw = ((formData.get("sale_ends_at") as string) || "").trim();
+  const saleStartsAt = startsRaw ? new Date(startsRaw).toISOString() : null;
+  const saleEndsAt = endsRaw ? new Date(endsRaw).toISOString() : null;
+
+  if (startsRaw && Number.isNaN(new Date(startsRaw).getTime())) {
+    return { error: "Sale start date is invalid" };
+  }
+  if (endsRaw && Number.isNaN(new Date(endsRaw).getTime())) {
+    return { error: "Sale end date is invalid" };
+  }
+  if (saleStartsAt && saleEndsAt && new Date(saleStartsAt) >= new Date(saleEndsAt)) {
+    return { error: "Sale start must be before sale end" };
+  }
+
+  return {
+    onSale: true,
+    salePercent: percent,
+    saleStartsAt,
+    saleEndsAt,
+    compareAt: regularPrice,
+  };
+}
+
+async function resolveTagsFromForm(
+  supabase: ServiceClient,
+  formData: FormData
+): Promise<{ tags: string[]; error?: string }> {
+  const tags = formData.getAll("tags").map(String).filter(Boolean);
+  const newTagName = ((formData.get("new_tag") as string) || "").trim();
+  if (!newTagName) return { tags };
+
+  const slug = slugify(newTagName);
+  if (!slug) return { tags, error: "Invalid new tag name" };
+
+  const { data: existing } = await supabase
+    .from("store_tags")
+    .select("slug")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!existing) {
+    const { error } = await supabase.from("store_tags").insert({
+      name: newTagName,
+      slug,
+    });
+    if (error) return { tags, error: error.message };
+  }
+
+  if (!tags.includes(slug)) tags.push(slug);
+  return { tags };
+}
+
+async function syncBookCategories(
+  supabase: ServiceClient,
+  bookId: string,
+  formData: FormData
+): Promise<{ error?: string }> {
+  const categoryIds = formData.getAll("categories").map(String).filter(Boolean);
+  const newCategoryName = ((formData.get("new_category") as string) || "").trim();
+
+  if (newCategoryName) {
+    const slug = slugify(newCategoryName);
+    if (!slug) return { error: "Invalid new category name" };
+
+    const { data: existing } = await supabase
+      .from("store_categories")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (existing) {
+      if (!categoryIds.includes(existing.id)) categoryIds.push(existing.id);
+    } else {
+      const { data: created, error } = await supabase
+        .from("store_categories")
+        .insert({ name: newCategoryName, slug, is_active: true })
+        .select("id")
+        .single();
+      if (error || !created) return { error: error?.message || "Failed to create category" };
+      categoryIds.push(created.id);
+    }
+  }
+
+  await supabase.from("store_book_categories").delete().eq("book_id", bookId);
+
+  if (categoryIds.length > 0) {
+    const { error } = await supabase.from("store_book_categories").insert(
+      categoryIds.map((category_id) => ({ book_id: bookId, category_id }))
+    );
+    if (error) return { error: error.message };
+  }
+
+  return {};
+}
+
 export async function updateOrderStatusAction(
   orderId: string,
   status: string,
@@ -96,23 +212,27 @@ export async function createBookAction(formData: FormData) {
   const title = formData.get("title") as string;
   const authorName = formData.get("author_name") as string;
   const slug = slugify(title);
-  const description = formData.get("description") as string;
+  const description = ((formData.get("description") as string) || "").trim() || null;
+  const language = ((formData.get("language") as string) || "").trim() || null;
+  const pageCountRaw = ((formData.get("page_count") as string) || "").trim();
+  const pageCount = pageCountRaw ? Number(pageCountRaw) : null;
+  if (pageCountRaw && (!Number.isFinite(pageCount) || !Number.isInteger(pageCount!) || pageCount! < 1)) {
+    return { error: "Page count must be a positive whole number" };
+  }
 
   const price = parseWholeRupee(formData.get("price"), {
     field: "Price",
   });
   if (price.error) return { error: price.error };
 
-  const compareAt = parseWholeRupee(formData.get("compare_at_price"), {
-    optional: true,
-    field: "Compare-at price",
-  });
-  if (compareAt.error) return { error: compareAt.error };
+  const sale = parseSaleFields(formData, price.value ?? 0);
+  if (sale.error) return { error: sale.error };
 
   const cover = await resolveCoverUrl(formData, slug);
   if (cover.error) return { error: cover.error };
 
-  const tags = formData.getAll("tags").map(String).filter(Boolean);
+  const tagsResult = await resolveTagsFromForm(supabase, formData);
+  if (tagsResult.error) return { error: tagsResult.error };
 
   const { data: book, error } = await supabase
     .from("store_books")
@@ -122,8 +242,14 @@ export async function createBookAction(formData: FormData) {
       author_name: authorName,
       description,
       cover_url: cover.url,
-      tags,
-      is_active: true,
+      language,
+      page_count: pageCount,
+      tags: tagsResult.tags,
+      is_bestseller: formData.get("is_bestseller") === "on",
+      is_new_release: formData.get("is_new_release") === "on",
+      is_featured: formData.get("is_featured") === "on",
+      is_trending: formData.get("is_trending") === "on",
+      is_active: formData.get("is_active") === "on",
     })
     .select()
     .single();
@@ -134,13 +260,22 @@ export async function createBookAction(formData: FormData) {
     book_id: book.id,
     format: "hardcover",
     price: price.value ?? 0,
-    compare_at_price: compareAt.value ?? null,
+    compare_at_price: sale.compareAt,
+    on_sale: sale.onSale,
+    sale_percent: sale.salePercent,
+    sale_starts_at: sale.saleStartsAt,
+    sale_ends_at: sale.saleEndsAt,
     stock: 100,
   });
+
+  const cats = await syncBookCategories(supabase, book.id, formData);
+  if (cats.error) return { error: cats.error };
 
   await logAdminAction("create_book", "book", book.id, { title });
   revalidatePath("/admin/books");
   revalidatePath("/books");
+  revalidatePath("/deals");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -214,13 +349,46 @@ export async function createCouponAction(formData: FormData) {
 export async function createCategoryAction(formData: FormData) {
   await requireAdmin();
   const supabase = await createServiceClient();
-  const name = formData.get("name") as string;
-  await supabase.from("store_categories").insert({
+  const name = ((formData.get("name") as string) || "").trim();
+  if (!name) return { error: "Category name is required" };
+  const { error } = await supabase.from("store_categories").insert({
     name,
     slug: slugify(name),
     is_active: true,
   });
+  if (error) return { error: error.message };
   revalidatePath("/admin/categories");
+  revalidatePath("/admin/books");
+  revalidatePath("/categories");
+  revalidatePath("/books");
+  return { success: true };
+}
+
+export async function deleteCategoryAction(categoryId: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  const { count } = await supabase
+    .from("store_book_categories")
+    .select("book_id", { count: "exact", head: true })
+    .eq("category_id", categoryId);
+
+  if ((count || 0) > 0) {
+    return {
+      error: `Cannot delete: ${count} book(s) are assigned to this category. Remove them first.`,
+    };
+  }
+
+  const { error } = await supabase
+    .from("store_categories")
+    .delete()
+    .eq("id", categoryId);
+  if (error) return { error: error.message };
+
+  await logAdminAction("delete_category", "category", categoryId);
+  revalidatePath("/admin/categories");
+  revalidatePath("/admin/books");
+  revalidatePath("/categories");
+  revalidatePath("/books");
   return { success: true };
 }
 
@@ -414,19 +582,22 @@ export async function updateBookAction(bookId: string, formData: FormData) {
   await requireAdmin();
   const supabase = await createServiceClient();
   const price = parseWholeRupee(formData.get("price"), {
-    optional: true,
     field: "Price",
   });
   if (price.error) return { error: price.error };
 
-  const compareAt = parseWholeRupee(formData.get("compare_at_price"), {
-    optional: true,
-    field: "Compare-at price",
-  });
-  if (compareAt.error) return { error: compareAt.error };
+  const sale = parseSaleFields(formData, price.value ?? 0);
+  if (sale.error) return { error: sale.error };
 
   const title = formData.get("title") as string;
   const slugBase = slugify(title) || bookId;
+  const description = ((formData.get("description") as string) || "").trim() || null;
+  const language = ((formData.get("language") as string) || "").trim() || null;
+  const pageCountRaw = ((formData.get("page_count") as string) || "").trim();
+  const pageCount = pageCountRaw ? Number(pageCountRaw) : null;
+  if (pageCountRaw && (!Number.isFinite(pageCount) || !Number.isInteger(pageCount!) || pageCount! < 1)) {
+    return { error: "Page count must be a positive whole number" };
+  }
 
   const { data: currentBook } = await supabase
     .from("store_books")
@@ -463,57 +634,64 @@ export async function updateBookAction(bookId: string, formData: FormData) {
     coverUpdate = { cover_url: null };
   }
 
-  const tags = formData.getAll("tags").map(String).filter(Boolean);
+  const tagsResult = await resolveTagsFromForm(supabase, formData);
+  if (tagsResult.error) return { error: tagsResult.error };
 
   await supabase
     .from("store_books")
     .update({
       title,
       author_name: formData.get("author_name") as string,
+      description,
+      language,
+      page_count: pageCount,
       ...coverUpdate,
-      tags,
+      tags: tagsResult.tags,
       is_bestseller: formData.get("is_bestseller") === "on",
       is_new_release: formData.get("is_new_release") === "on",
       is_featured: formData.get("is_featured") === "on",
+      is_trending: formData.get("is_trending") === "on",
+      is_active: formData.get("is_active") === "on",
     })
     .eq("id", bookId);
 
-  if (price.value != null) {
-    const { data: existing } = await supabase
-      .from("store_book_formats")
-      .select("id")
-      .eq("book_id", bookId)
-      .eq("format", "hardcover")
-      .maybeSingle();
+  const cats = await syncBookCategories(supabase, bookId, formData);
+  if (cats.error) return { error: cats.error };
 
-    const formatPatch = {
-      price: price.value,
-      ...(compareAt.value != null ? { compare_at_price: compareAt.value } : {}),
-    };
+  const { data: existing } = await supabase
+    .from("store_book_formats")
+    .select("id")
+    .eq("book_id", bookId)
+    .eq("format", "hardcover")
+    .maybeSingle();
 
-    if (existing) {
-      await supabase
-        .from("store_book_formats")
-        .update(formatPatch)
-        .eq("id", existing.id);
-    } else {
-      await supabase.from("store_book_formats").insert({
-        book_id: bookId,
-        format: "hardcover",
-        price: price.value,
-        compare_at_price: compareAt.value ?? null,
-        stock: 100,
-      });
-    }
-  } else if (compareAt.value != null) {
+  const formatPatch = {
+    price: price.value ?? 0,
+    compare_at_price: sale.compareAt,
+    on_sale: sale.onSale,
+    sale_percent: sale.salePercent,
+    sale_starts_at: sale.saleStartsAt,
+    sale_ends_at: sale.saleEndsAt,
+  };
+
+  if (existing) {
     await supabase
       .from("store_book_formats")
-      .update({ compare_at_price: compareAt.value })
-      .eq("book_id", bookId)
-      .eq("format", "hardcover");
+      .update(formatPatch)
+      .eq("id", existing.id);
+  } else {
+    await supabase.from("store_book_formats").insert({
+      book_id: bookId,
+      format: "hardcover",
+      ...formatPatch,
+      stock: 100,
+    });
   }
 
   revalidatePath("/admin/books");
+  revalidatePath("/books");
+  revalidatePath("/deals");
+  revalidatePath(`/dp/${slugBase}`);
   revalidatePath("/");
   return { success: true };
 }

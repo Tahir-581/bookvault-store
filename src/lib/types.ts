@@ -44,6 +44,7 @@ export type Book = {
   is_featured: boolean;
   is_bestseller: boolean;
   is_new_release: boolean;
+  is_trending: boolean;
   /** Tag slugs assigned to the book */
   tags: string[] | null;
   /** Resolved display names for `tags` */
@@ -61,6 +62,10 @@ export type BookFormatRow = {
   stock: number;
   sku: string | null;
   is_active: boolean;
+  on_sale?: boolean;
+  sale_percent?: number | null;
+  sale_starts_at?: string | null;
+  sale_ends_at?: string | null;
 };
 
 export type BookWithFormats = Book & {
@@ -121,7 +126,7 @@ export type NavMenuItem = {
 };
 
 export type HomepageSectionConfig = {
-  filter?: "bestseller" | "new_release" | "featured" | "deals";
+  filter?: "bestseller" | "new_release" | "featured" | "deals" | "trending";
   category?: string;
   limit?: number;
   see_more_href?: string;

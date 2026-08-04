@@ -85,6 +85,13 @@ export function MobileNavDrawer({
           <div className="border-b border-border py-2">
             <p className="px-4 py-2 text-base font-bold text-foreground">Trending</p>
             <Link
+              href="/books?sort=trending"
+              onClick={onClose}
+              className="block px-4 py-2.5 text-base text-foreground hover:bg-muted"
+            >
+              Trending Now
+            </Link>
+            <Link
               href="/books?sort=bestseller"
               onClick={onClose}
               className="block px-4 py-2.5 text-base text-foreground hover:bg-muted"

@@ -70,6 +70,7 @@ export async function getBooksSubNav() {
       ],
     },
     { label: "Best Sellers", href: "/books?sort=bestseller" },
+    { label: "Trending", href: "/books?sort=trending" },
     { label: "New Releases", href: "/books?sort=newest" },
   ];
   return getNavMenu("books_subnav", defaults);

@@ -1487,7 +1487,11 @@ export type Database = {
           format: string
           id: string
           is_active: boolean
+          on_sale: boolean
           price: number
+          sale_ends_at: string | null
+          sale_percent: number | null
+          sale_starts_at: string | null
           sku: string | null
           stock: number
         }
@@ -1497,7 +1501,11 @@ export type Database = {
           format: string
           id?: string
           is_active?: boolean
+          on_sale?: boolean
           price: number
+          sale_ends_at?: string | null
+          sale_percent?: number | null
+          sale_starts_at?: string | null
           sku?: string | null
           stock?: number
         }
@@ -1507,7 +1515,11 @@ export type Database = {
           format?: string
           id?: string
           is_active?: boolean
+          on_sale?: boolean
           price?: number
+          sale_ends_at?: string | null
+          sale_percent?: number | null
+          sale_starts_at?: string | null
           sku?: string | null
           stock?: number
         }
@@ -1587,6 +1599,7 @@ export type Database = {
           is_bestseller: boolean
           is_featured: boolean
           is_new_release: boolean
+          is_trending: boolean
           isbn: string | null
           language: string | null
           page_count: number | null
@@ -1613,6 +1626,7 @@ export type Database = {
           is_bestseller?: boolean
           is_featured?: boolean
           is_new_release?: boolean
+          is_trending?: boolean
           isbn?: string | null
           language?: string | null
           page_count?: number | null
@@ -1639,6 +1653,7 @@ export type Database = {
           is_bestseller?: boolean
           is_featured?: boolean
           is_new_release?: boolean
+          is_trending?: boolean
           isbn?: string | null
           language?: string | null
           page_count?: number | null

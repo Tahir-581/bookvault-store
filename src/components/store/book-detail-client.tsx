@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/store/product-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { BookFormat } from "@/lib/constants";
+import { getEffectivePrice } from "@/lib/pricing";
 import { useCartStore } from "@/lib/store/cart";
 import { useWishlistStore } from "@/lib/store/wishlist";
 import { formatPrice } from "@/lib/utils";
@@ -36,6 +37,7 @@ export function BookDetailClient({
   related: BookWithFormats[];
 }) {
   const format = book.formats[0] || null;
+  const pricing = getEffectivePrice(format);
   const addToCart = useCartStore((s) => s.addItem);
   const { addItem: addToWishlist, hasItem, removeItem } = useWishlistStore();
   const inWishlist = hasItem(book.id);
@@ -54,7 +56,7 @@ export function BookDetailClient({
       author: book.author_name,
       coverUrl: cover,
       format: "hardcover" as BookFormat,
-      unitPrice: format.price,
+      unitPrice: pricing.displayPrice,
       quantity: 1,
     });
     toast.success("Added to cart");
@@ -115,11 +117,16 @@ export function BookDetailClient({
           {format && (
             <div className="mb-4">
               <span className="text-3xl font-medium text-destructive">
-                {formatPrice(format.price)}
+                {formatPrice(pricing.displayPrice)}
               </span>
-              {format.compare_at_price && (
+              {pricing.compareAt && pricing.compareAt > pricing.displayPrice && (
                 <span className="ml-2 text-sm text-gray-500 line-through">
-                  {formatPrice(format.compare_at_price)}
+                  {formatPrice(pricing.compareAt)}
+                </span>
+              )}
+              {pricing.onSale && pricing.salePercent != null && (
+                <span className="ml-2 text-sm font-medium text-deal">
+                  -{pricing.salePercent}%
                 </span>
               )}
             </div>

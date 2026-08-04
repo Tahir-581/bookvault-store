@@ -3,6 +3,7 @@ import { StarRating } from "@/components/store/star-rating";
 import { Badge } from "@/components/ui/badge";
 import { CoverImage } from "@/components/store/cover-image";
 import { DealCountdown } from "@/components/store/deal-countdown";
+import { getEffectivePrice } from "@/lib/pricing";
 import { cn, formatAmazonPrice, formatPrice } from "@/lib/utils";
 import type { BookFormatRow, BookWithFormats } from "@/lib/types";
 
@@ -20,18 +21,18 @@ export function ProductCard({
   className?: string;
 }) {
   const formatRow = book.formats[0] as BookFormatRow | undefined;
-  const lowestPrice = formatRow?.price ?? (book.formats.length
-    ? Math.min(...book.formats.map((f) => f.price))
-    : 0);
+  const effective = getEffectivePrice(formatRow);
   const comparePrice =
     deal?.list_price ??
-    formatRow?.compare_at_price ??
-    book.formats.find((f) => f.compare_at_price)?.compare_at_price;
-  const price = deal ? deal.deal_price : lowestPrice;
+    (deal ? formatRow?.price : null) ??
+    effective.compareAt;
+  const price = deal ? deal.deal_price : effective.displayPrice;
   const cover = book.cover_url || "/placeholder-book.svg";
   const tagLabels = book.tag_labels?.length
     ? book.tag_labels
     : book.tags || [];
+  const showCountdown =
+    Boolean(deal?.ends_at) || (effective.onSale && Boolean(effective.saleEndsAt));
 
   if (variant === "storefront") {
     const amazonPrice = formatAmazonPrice(price);
@@ -77,7 +78,9 @@ export function ProductCard({
             {tagLabels.join(" · ")}
           </p>
         )}
-        {deal ? <DealCountdown endsAt={deal.ends_at} /> : null}
+        {showCountdown ? (
+          <DealCountdown endsAt={(deal?.ends_at || effective.saleEndsAt)!} />
+        ) : null}
         {discountPct !== null && discountPct > 0 && (
           <p className="mt-0.5 text-sm font-medium text-deal">-{discountPct}%</p>
         )}

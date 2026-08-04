@@ -1,5 +1,6 @@
 import type { HomepageSectionConfig, Tag } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
+import { getEffectivePrice } from "@/lib/pricing";
 import type { BookWithFormats, DealWithBook } from "@/lib/types";
 
 export type BookFilters = {
@@ -57,10 +58,30 @@ export async function getBooks(filters: BookFilters = {}) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  let categoryBookIds: string[] | null = null;
+  if (filters.category) {
+    const category = await getCategoryBySlug(filters.category);
+    if (!category) {
+      return { books: [], total: 0, page, pageSize: limit };
+    }
+    const { data: links } = await supabase
+      .from("store_book_categories")
+      .select("book_id")
+      .eq("category_id", category.id);
+    categoryBookIds = [...new Set((links || []).map((l) => l.book_id))];
+    if (categoryBookIds.length === 0) {
+      return { books: [], total: 0, page, pageSize: limit };
+    }
+  }
+
   let query = supabase
     .from("store_books")
     .select("*, store_book_formats(*)", { count: "exact" })
     .eq("is_active", true);
+
+  if (categoryBookIds) {
+    query = query.in("id", categoryBookIds);
+  }
 
   if (filters.q) {
     query = query.or(
@@ -84,6 +105,11 @@ export async function getBooks(filters: BookFilters = {}) {
       break;
     case "bestseller":
       query = query.eq("is_bestseller", true).order("review_count", {
+        ascending: false,
+      });
+      break;
+    case "trending":
+      query = query.eq("is_trending", true).order("review_count", {
         ascending: false,
       });
       break;
@@ -112,7 +138,8 @@ export async function getBooks(filters: BookFilters = {}) {
 
   if (filters.minPrice || filters.maxPrice) {
     books = books.filter((b) => {
-      const min = Math.min(...b.formats.map((f) => f.price));
+      const prices = b.formats.map((f) => getEffectivePrice(f).displayPrice);
+      const min = prices.length ? Math.min(...prices) : 0;
       if (filters.minPrice && min < filters.minPrice) return false;
       if (filters.maxPrice && min > filters.maxPrice) return false;
       return true;
@@ -167,16 +194,7 @@ export async function getNewReleases(limit = 12) {
 }
 
 export async function getDeals() {
-  if (!hasSupabase()) return [];
-  const supabase = await createClient();
-  const now = new Date().toISOString();
-  const { data } = await supabase
-    .from("store_deals")
-    .select("*, store_books(*, store_book_formats(*))")
-    .eq("is_active", true)
-    .lte("starts_at", now)
-    .gte("ends_at", now);
-  return data || [];
+  return getActiveDealsWithBooks(48);
 }
 
 export async function getRelatedBooks(bookId: string, categoryIds: string[], limit = 6) {
@@ -282,33 +300,45 @@ export async function getBooksByCategory(slug: string, limit = 12) {
   return books.slice(0, limit);
 }
 
+/** Active per-format sales (on_sale + percent within optional date window). */
 export async function getActiveDealsWithBooks(limit = 12): Promise<DealWithBook[]> {
   if (!hasSupabase()) return [];
   const supabase = await createClient();
-  const now = new Date().toISOString();
   const { data } = await supabase
-    .from("store_deals")
+    .from("store_book_formats")
     .select("*, store_books(*, store_book_formats(*))")
+    .eq("on_sale", true)
     .eq("is_active", true)
-    .lte("starts_at", now)
-    .gte("ends_at", now)
-    .limit(limit);
+    .not("sale_percent", "is", null)
+    .limit(limit * 3);
 
   const tagMap = await getTagMap();
-  return (data || []).map((deal) => {
-    const raw = deal.store_books as Record<string, unknown>;
-    const book = mapBookRow(raw, tagMap);
-    return {
-      id: deal.id,
-      book_id: deal.book_id,
-      format_id: deal.format_id,
-      deal_price: Number(deal.deal_price),
-      starts_at: deal.starts_at,
-      ends_at: deal.ends_at,
-      is_active: deal.is_active,
+  const now = new Date();
+  const deals: DealWithBook[] = [];
+
+  for (const row of data || []) {
+    const effective = getEffectivePrice(row, now);
+    if (!effective.onSale) continue;
+
+    const rawBook = row.store_books as Record<string, unknown> | null;
+    if (!rawBook || rawBook.is_active === false) continue;
+
+    const book = mapBookRow(rawBook, tagMap);
+    deals.push({
+      id: row.id,
+      book_id: row.book_id,
+      format_id: row.id,
+      deal_price: effective.displayPrice,
+      starts_at: row.sale_starts_at || now.toISOString(),
+      ends_at: row.sale_ends_at || "",
+      is_active: true,
       book,
-    };
-  });
+    });
+
+    if (deals.length >= limit) break;
+  }
+
+  return deals;
 }
 
 export async function resolveSectionBooks(config: HomepageSectionConfig) {
@@ -333,6 +363,9 @@ export async function resolveSectionBooks(config: HomepageSectionConfig) {
     case "bestseller":
       sort = "bestseller";
       break;
+    case "trending":
+      sort = "trending";
+      break;
     case "new_release":
       sort = "newest";
       break;
@@ -353,6 +386,11 @@ export async function resolveSectionBooks(config: HomepageSectionConfig) {
     }
   } else if (config.filter === "featured") {
     filtered = books.filter((b) => b.is_featured);
+    if (filtered.length < limit) {
+      filtered = books;
+    }
+  } else if (config.filter === "trending") {
+    filtered = books.filter((b) => b.is_trending);
     if (filtered.length < limit) {
       filtered = books;
     }

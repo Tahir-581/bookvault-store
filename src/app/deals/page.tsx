@@ -41,7 +41,7 @@ export default async function DealsPage() {
                   deal_price: deal.deal_price,
                   ends_at: deal.ends_at,
                   list_price:
-                    deal.book.formats.find((f) => f.compare_at_price)?.compare_at_price ??
+                    deal.book.formats.find((f) => f.id === deal.format_id)?.price ??
                     deal.book.formats[0]?.price,
                 }}
               />
