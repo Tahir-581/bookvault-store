@@ -10,6 +10,7 @@ import {
   User,
 } from "lucide-react";
 import { useState } from "react";
+import { IlfaazMark } from "@/components/store/ilfaaz-mark";
 import { MobileNavDrawer } from "@/components/store/mobile-nav-drawer";
 import { useCartStore } from "@/lib/store/cart";
 import type { NavMenuItem } from "@/lib/types";
@@ -57,9 +58,10 @@ export function StoreHeader({
             </button>
             <Link
               href="/"
-              className="min-w-0 flex-1 truncate text-center text-2xl font-bold text-white hover:text-white"
+              className="flex min-w-0 flex-1 items-center justify-center gap-1.5 text-white hover:text-white"
             >
-              {siteName}
+              <IlfaazMark className="h-7 w-auto shrink-0" />
+              <span className="truncate text-2xl font-bold">{siteName}</span>
             </Link>
             <Link
               href="/account"
@@ -117,9 +119,10 @@ export function StoreHeader({
 
             <Link
               href="/"
-              className="max-w-[28vw] shrink-0 truncate text-xl font-bold text-white hover:text-white sm:max-w-none"
+              className="flex max-w-[28vw] shrink-0 items-center gap-1.5 text-white hover:text-white sm:max-w-none"
             >
-              {siteName}
+              <IlfaazMark className="h-8 w-auto shrink-0" />
+              <span className="truncate text-xl font-bold">{siteName}</span>
             </Link>
 
             <button
