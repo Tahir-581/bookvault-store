@@ -1,6 +1,10 @@
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function clamp01(n: number) {
+  return Math.min(1, Math.max(0, n));
+}
+
 export function StarRating({
   rating,
   count,
@@ -14,17 +18,27 @@ export function StarRating({
   showCount?: boolean;
   showNumericFirst?: boolean;
 }) {
+  const iconClass = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
+
   const stars = Array.from({ length: 5 }, (_, i) => {
-    const filled = rating >= i + 1;
-    const half = !filled && rating >= i + 0.5;
+    const fill = clamp01(rating - i);
+
     return (
-      <Star
+      <span
         key={i}
-        className={cn(
-          size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4",
-          filled || half ? "fill-star text-star" : "fill-muted text-muted"
+        className={cn("relative inline-block", iconClass)}
+        aria-hidden="true"
+      >
+        <Star className={cn(iconClass, "fill-muted text-muted")} />
+        {fill > 0 && (
+          <span
+            className="absolute inset-y-0 left-0 overflow-hidden"
+            style={{ width: `${fill * 100}%` }}
+          >
+            <Star className={cn(iconClass, "fill-star text-star")} />
+          </span>
         )}
-      />
+      </span>
     );
   });
 
@@ -32,7 +46,9 @@ export function StarRating({
     return (
       <div className="flex items-center gap-1">
         <span className="text-sm text-foreground">{rating.toFixed(1)}</span>
-        <div className="flex">{stars}</div>
+        <div className="flex" role="img" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
+          {stars}
+        </div>
         {showCount && count !== undefined && (
           <span className="text-xs text-link hover:text-link-hover">
             {count.toLocaleString()}
@@ -44,7 +60,9 @@ export function StarRating({
 
   return (
     <div className="flex items-center gap-1">
-      <div className="flex">{stars}</div>
+      <div className="flex" role="img" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
+        {stars}
+      </div>
       {showCount && count !== undefined && (
         <span className="text-xs text-link hover:text-link-hover">
           {count.toLocaleString()}

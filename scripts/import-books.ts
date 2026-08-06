@@ -280,7 +280,11 @@ async function importBook(
     } else {
       const { data: inserted, error } = await supabase
         .from("store_books")
-        .insert(bookFields)
+        .insert({
+          ...bookFields,
+          avg_rating: book.avg_rating,
+          review_count: book.review_count,
+        })
         .select("id")
         .single();
       if (error || !inserted) {

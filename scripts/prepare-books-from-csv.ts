@@ -42,9 +42,23 @@ export type PreparedBook = {
   tags: string[];
   badges: PreparedBadges;
   cover_path: string;
+  /** Random 4.0–5.0 (1 decimal); applied on first insert only. */
+  avg_rating: number;
+  /** Random 50–500; applied on first insert only. */
+  review_count: number;
   source_csv: string;
   source_row: number;
 };
+
+/** Random rating in [4.0, 5.0] at one decimal place. */
+function randomAvgRating(): number {
+  return Math.round((4 + Math.random()) * 10) / 10;
+}
+
+/** Random whole review count in [50, 500]. */
+function randomReviewCount(): number {
+  return Math.floor(Math.random() * 451) + 50;
+}
 
 type RowError = {
   source_csv: string;
@@ -458,6 +472,8 @@ function main() {
         tags,
         badges,
         cover_path: coverPath!,
+        avg_rating: randomAvgRating(),
+        review_count: randomReviewCount(),
         source_csv: file,
         source_row: sourceRow,
       });
