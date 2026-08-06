@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,12 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("error") === "auth") {
+      toast.error("Google sign-in failed. Please try again.");
+    }
+  }, [searchParams]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -34,7 +41,18 @@ export function LoginForm() {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
       <h1 className="text-2xl font-medium">Sign in</h1>
-      <form onSubmit={handleLogin} className="mt-6 space-y-4">
+      <div className="mt-6 space-y-4">
+        <GoogleAuthButton next={next} />
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-muted-foreground">or</span>
+          </div>
+        </div>
+      </div>
+      <form onSubmit={handleLogin} className="mt-4 space-y-4">
         <div>
           <Label>Email</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -48,7 +66,7 @@ export function LoginForm() {
         </Button>
       </form>
       <p className="mt-4 text-center text-sm">
-        New to Ilfaaz?{" "}
+        New to ilfaaz?{" "}
         <Link href="/auth/signup" className="text-link hover:text-link-hover">
           Create an account
         </Link>
