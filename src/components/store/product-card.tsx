@@ -74,7 +74,7 @@ export function ProductCard({
           />
         </div>
         {tagLabels.length > 0 && (
-          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+          <p className="mt-0.5 line-clamp-1 hidden text-xs text-muted-foreground">
             {tagLabels.join(" · ")}
           </p>
         )}

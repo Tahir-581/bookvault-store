@@ -160,8 +160,8 @@ export function BookDetailClient({
             {book.isbn && <p>ISBN: {book.isbn}</p>}
             {book.publisher && <p>Publisher: {book.publisher}</p>}
             {book.publication_date && <p>Publication date: {book.publication_date}</p>}
-            {book.page_count && <p>Pages: {book.page_count}</p>}
-            {book.language && <p>Language: {book.language}</p>}
+            {book.page_count && <p className="hidden">Pages: {book.page_count}</p>}
+            {book.language && <p className="hidden">Language: {book.language}</p>}
           </div>
         </div>
       </div>
