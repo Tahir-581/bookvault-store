@@ -52,6 +52,19 @@ export async function getFooterConfig() {
   }
 }
 
+const MEMBERSHIP_HREF = "/account/membership";
+
+function withoutMembershipNav(items: NavMenuItem[]): NavMenuItem[] {
+  return items
+    .filter((item) => item.href !== MEMBERSHIP_HREF)
+    .map((item) => ({
+      ...item,
+      children: item.children
+        ? withoutMembershipNav(item.children)
+        : undefined,
+    }));
+}
+
 export async function getBooksSubNav() {
   const defaults: NavMenuItem[] = [
     { label: "Deals", href: "/deals" },
@@ -73,7 +86,12 @@ export async function getBooksSubNav() {
     { label: "Trending", href: "/books?sort=trending" },
     { label: "New Releases", href: "/books?sort=newest" },
   ];
-  return getNavMenu("books_subnav", defaults);
+  const [items, config] = await Promise.all([
+    getNavMenu("books_subnav", defaults),
+    getSiteConfig(),
+  ]);
+  if (config.membershipEnabled) return items;
+  return withoutMembershipNav(items);
 }
 
 async function getNavMenuWithDefaults(menuKey: string, defaults: NavMenuItem[]) {

@@ -8,6 +8,7 @@ import { GoogleAuthButton } from "@/components/auth/google-auth-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { oauthLoginErrorMessage } from "@/lib/auth-oauth-errors";
 import { createClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
@@ -19,8 +20,9 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (searchParams.get("error") === "auth") {
-      toast.error("Google sign-in failed. Please try again.");
+    const message = oauthLoginErrorMessage(searchParams.get("error"));
+    if (message) {
+      toast.error(message);
     }
   }, [searchParams]);
 

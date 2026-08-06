@@ -11,12 +11,14 @@ export function MobileNavDrawer({
   siteName,
   megaMenu,
   secondaryNav,
+  userDisplayName = null,
 }: {
   open: boolean;
   onClose: () => void;
   siteName: string;
   megaMenu: NavMenuItem[];
   secondaryNav: NavMenuItem[];
+  userDisplayName?: string | null;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -64,7 +66,9 @@ export function MobileNavDrawer({
             onClick={onClose}
             className="mb-3 flex items-center justify-end gap-2 text-sm text-white hover:text-white"
           >
-            <span>Sign in</span>
+            <span>
+              {userDisplayName ? `Hello, ${userDisplayName}` : "Sign in"}
+            </span>
             <User className="h-5 w-5" />
           </Link>
           <p className="text-lg">

@@ -241,6 +241,77 @@ export async function getCategories() {
   return data || [];
 }
 
+export async function getHomepageCategories() {
+  if (!hasSupabase()) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("store_categories")
+    .select("*")
+    .eq("is_active", true)
+    .eq("show_on_homepage", true)
+    .is("parent_id", null)
+    .order("homepage_sort_order")
+    .order("sort_order")
+    .order("name");
+  return data || [];
+}
+
+/** Active categories/subcategories with at least `minBooks` active books each. */
+export async function getCategoriesForHomepageShelves(minBooks = 12) {
+  if (!hasSupabase() || minBooks < 1) return [];
+
+  const supabase = await createClient();
+  const { data: categories } = await supabase
+    .from("store_categories")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("name");
+
+  if (!categories?.length) return [];
+
+  const categoryIds = categories.map((c) => c.id);
+  const { data: links } = await supabase
+    .from("store_book_categories")
+    .select("category_id, book_id")
+    .in("category_id", categoryIds);
+
+  if (!links?.length) return [];
+
+  const bookIdsByCategory = new Map<string, string[]>();
+  const allBookIds = new Set<string>();
+  for (const link of links) {
+    const list = bookIdsByCategory.get(link.category_id) || [];
+    list.push(link.book_id);
+    bookIdsByCategory.set(link.category_id, list);
+    allBookIds.add(link.book_id);
+  }
+
+  const books = await getBooksByIds([...allBookIds]);
+  const bookById = new Map(books.map((b) => [b.id, b]));
+
+  const shelves: {
+    category: (typeof categories)[number];
+    books: BookWithFormats[];
+  }[] = [];
+
+  for (const category of categories) {
+    const ids = bookIdsByCategory.get(category.id) || [];
+    const shelfBooks: BookWithFormats[] = [];
+    for (const id of ids) {
+      const book = bookById.get(id);
+      if (!book) continue;
+      shelfBooks.push(book);
+      if (shelfBooks.length >= minBooks) break;
+    }
+    if (shelfBooks.length >= minBooks) {
+      shelves.push({ category, books: shelfBooks });
+    }
+  }
+
+  return shelves;
+}
+
 export async function getCategoryBySlug(slug: string) {
   if (!hasSupabase()) return null;
   const supabase = await createClient();
@@ -248,6 +319,7 @@ export async function getCategoryBySlug(slug: string) {
     .from("store_categories")
     .select("*")
     .eq("slug", slug)
+    .eq("is_active", true)
     .maybeSingle();
   return data;
 }

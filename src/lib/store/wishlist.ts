@@ -15,16 +15,21 @@ export type WishlistItem = {
 
 type WishlistState = {
   items: WishlistItem[];
+  isDrawerOpen: boolean;
   addItem: (item: Omit<WishlistItem, "addedAt">) => void;
   removeItem: (bookId: string) => void;
   hasItem: (bookId: string) => boolean;
   clear: () => void;
+  openDrawer: () => void;
+  closeDrawer: () => void;
+  toggleDrawer: () => void;
 };
 
 export const useWishlistStore = create<WishlistState>()(
   persist(
     (set, get) => ({
       items: [],
+      isDrawerOpen: false,
       addItem: (item) => {
         if (get().hasItem(item.bookId)) return;
         set({
@@ -40,7 +45,13 @@ export const useWishlistStore = create<WishlistState>()(
         })),
       hasItem: (bookId) => get().items.some((i) => i.bookId === bookId),
       clear: () => set({ items: [] }),
+      openDrawer: () => set({ isDrawerOpen: true }),
+      closeDrawer: () => set({ isDrawerOpen: false }),
+      toggleDrawer: () => set((state) => ({ isDrawerOpen: !state.isDrawerOpen })),
     }),
-    { name: "ilfaaz-wishlist" }
+    {
+      name: "ilfaaz-wishlist",
+      partialize: (state) => ({ items: state.items }),
+    }
   )
 );

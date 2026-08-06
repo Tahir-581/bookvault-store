@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
-    "test:smoke": "tsx scripts/smoke-test.ts"
+    "test:smoke": "tsx scripts/smoke-test.ts",
+    "test:google-oauth": "tsx scripts/verify-google-oauth-branding.ts",
+    "books:prepare": "tsx scripts/prepare-books-from-csv.ts",
+    "books:import": "tsx scripts/import-books.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.2.6",

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { mapOAuthErrorParam } from "@/lib/auth-oauth-errors";
 
 export async function updateSession(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
@@ -9,6 +10,29 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/callback";
     url.searchParams.set("next", "/auth/update-password");
+    return NextResponse.redirect(url);
+  }
+
+  // Supabase redirects expired/failed OAuth to Site URL with ?error=...
+  // (cannot trust redirectTo when state JWT is invalid). Send users to login.
+  const oauthError = searchParams.get("error");
+  const oauthErrorCode = searchParams.get("error_code");
+  if (
+    !code &&
+    (oauthError || oauthErrorCode) &&
+    !pathname.startsWith("/auth")
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/login";
+    url.search = "";
+    url.searchParams.set(
+      "error",
+      mapOAuthErrorParam({
+        error: oauthError,
+        errorCode: oauthErrorCode,
+        errorDescription: searchParams.get("error_description"),
+      })
+    );
     return NextResponse.redirect(url);
   }
 

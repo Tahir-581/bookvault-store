@@ -361,6 +361,81 @@ export async function createCategoryAction(formData: FormData) {
   revalidatePath("/admin/books");
   revalidatePath("/categories");
   revalidatePath("/books");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function updateCategoryHomepageAction(
+  categoryId: string,
+  showOnHomepage: boolean
+) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+
+  const { data: category, error: fetchError } = await supabase
+    .from("store_categories")
+    .select("id, parent_id, show_on_homepage, homepage_sort_order")
+    .eq("id", categoryId)
+    .maybeSingle();
+
+  if (fetchError) return { error: fetchError.message };
+  if (!category) return { error: "Category not found" };
+  if (category.parent_id) {
+    return { error: "Only top-level categories can appear on the homepage" };
+  }
+
+  let homepageSortOrder = category.homepage_sort_order ?? 0;
+  if (showOnHomepage && !category.show_on_homepage) {
+    const { data: featured } = await supabase
+      .from("store_categories")
+      .select("homepage_sort_order")
+      .eq("show_on_homepage", true)
+      .is("parent_id", null)
+      .order("homepage_sort_order", { ascending: false })
+      .limit(1);
+    homepageSortOrder = (featured?.[0]?.homepage_sort_order ?? -1) + 1;
+  }
+
+  const { error } = await supabase
+    .from("store_categories")
+    .update({
+      show_on_homepage: showOnHomepage,
+      homepage_sort_order: showOnHomepage ? homepageSortOrder : 0,
+    })
+    .eq("id", categoryId);
+
+  if (error) return { error: error.message };
+
+  await logAdminAction("update_category_homepage", "category", categoryId, {
+    show_on_homepage: showOnHomepage,
+  });
+  revalidatePath("/admin/categories");
+  revalidatePath("/admin/books");
+  revalidatePath("/categories");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function reorderHomepageCategoriesAction(orderedIds: string[]) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+
+  for (let i = 0; i < orderedIds.length; i++) {
+    const { error } = await supabase
+      .from("store_categories")
+      .update({ homepage_sort_order: i, show_on_homepage: true })
+      .eq("id", orderedIds[i])
+      .is("parent_id", null);
+    if (error) return { error: error.message };
+  }
+
+  await logAdminAction("reorder_homepage_categories", "category", undefined, {
+    orderedIds,
+  });
+  revalidatePath("/admin/categories");
+  revalidatePath("/admin/books");
+  revalidatePath("/categories");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -389,6 +464,7 @@ export async function deleteCategoryAction(categoryId: string) {
   revalidatePath("/admin/books");
   revalidatePath("/categories");
   revalidatePath("/books");
+  revalidatePath("/");
   return { success: true };
 }
 

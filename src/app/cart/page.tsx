@@ -13,7 +13,7 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-[1500px] px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold">Your Ilfaaz Cart is empty</h1>
+        <h1 className="text-2xl font-bold">Your ilfaaz Cart is empty</h1>
         <p className="mt-2 text-gray-600">
           Check out our bestsellers or search for your next read.
         </p>

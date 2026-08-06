@@ -18,7 +18,7 @@ export default async function CategoriesPage() {
           {categories.map((cat) => (
             <li key={cat.id}>
               <Link
-                href={`/books?category=${cat.slug}`}
+                href={`/categories/${cat.slug}`}
                 className="flex items-center justify-between py-3.5 text-base text-link hover:underline"
               >
                 {cat.name}

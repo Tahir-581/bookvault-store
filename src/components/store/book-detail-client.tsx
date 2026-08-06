@@ -39,7 +39,12 @@ export function BookDetailClient({
   const format = book.formats[0] || null;
   const pricing = getEffectivePrice(format);
   const addToCart = useCartStore((s) => s.addItem);
-  const { addItem: addToWishlist, hasItem, removeItem } = useWishlistStore();
+  const {
+    addItem: addToWishlist,
+    hasItem,
+    removeItem,
+    openDrawer: openWishlistDrawer,
+  } = useWishlistStore();
   const inWishlist = hasItem(book.id);
 
   const cover = book.cover_url || "/placeholder-book.svg";
@@ -75,6 +80,7 @@ export function BookDetailClient({
         format: "hardcover",
       });
       toast.success("Added to wishlist");
+      openWishlistDrawer();
     }
   }
 

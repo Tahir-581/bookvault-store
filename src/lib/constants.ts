@@ -1,4 +1,4 @@
-export const SITE_NAME = "Ilfaaz";
+export const SITE_NAME = "ilfaaz";
 export const SITE_TAB_TITLE = "ilfaaz books store";
 export const SITE_TAGLINE = "Your favourite books, delivered fast";
 
@@ -46,7 +46,7 @@ export const DEFAULT_SITE_CONFIG = {
   guestCheckout: true,
   reviewsEnabled: true,
   wishlistsEnabled: true,
-  membershipEnabled: true,
+  membershipEnabled: false,
 };
 
 export const COVER_BUCKET = "books-site-media";

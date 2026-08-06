@@ -31,7 +31,7 @@ ON CONFLICT (menu_key) DO UPDATE SET items = EXCLUDED.items, label = EXCLUDED.la
 UPDATE store_settings SET value = '{
   "columns": [
     {"title":"Get to Know Us","links":[{"label":"Careers","href":"/pages/careers"},{"label":"About Us","href":"/pages/about"},{"label":"Sustainability","href":"/pages/about"}]},
-    {"title":"Make Money with Us","links":[{"label":"Sell on Ilfaaz","href":"/pages/help"},{"label":"Associates Programme","href":"/pages/help"},{"label":"Advertise Your Products","href":"/pages/help"},{"label":"Independently Publish with Us","href":"/pages/help"}]},
+    {"title":"Make Money with Us","links":[{"label":"Sell on ilfaaz","href":"/pages/help"},{"label":"Associates Programme","href":"/pages/help"},{"label":"Advertise Your Products","href":"/pages/help"},{"label":"Independently Publish with Us","href":"/pages/help"}]},
     {"title":"Payment Methods","links":[{"label":"Gift Cards","href":"/pages/payment"},{"label":"Payment Methods Help","href":"/pages/payment"},{"label":"Shop with Points","href":"/pages/payment"}]},
     {"title":"Let Us Help You","links":[{"label":"Track Packages or View Orders","href":"/account/orders"},{"label":"Delivery Rates & Policies","href":"/pages/help"},{"label":"Returns & Replacements","href":"/pages/returns"},{"label":"Customer Service","href":"/pages/help"},{"label":"Accessibility","href":"/pages/help"}]}
   ],
@@ -48,6 +48,6 @@ UPDATE store_settings SET value = '{
     {"label":"Cookies Notice","href":"/pages/about"},
     {"label":"Interest-Based Ads Notice","href":"/pages/about"}
   ],
-  "copyright": "© 1996-2026, Ilfaaz. All rights reserved."
+  "copyright": "© 1996-2026, ilfaaz. All rights reserved."
 }'::jsonb
 WHERE key = 'footer';

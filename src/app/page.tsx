@@ -15,7 +15,9 @@ export default async function HomePage() {
       <div className="mx-auto w-full min-w-0 max-w-[1500px] bg-background px-3 py-3 sm:px-4">
         <HomepageSectionRenderer
           sections={sections as import("@/lib/types").HomepageSection[]}
-          membershipName={config.membershipName}
+          membershipName={
+            config.membershipEnabled ? config.membershipName : undefined
+          }
         />
       </div>
     </>

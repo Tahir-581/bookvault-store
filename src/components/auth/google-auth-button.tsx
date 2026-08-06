@@ -1,9 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Script from "next/script";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const GIS_SRC = "https://accounts.google.com/gsi/client";
+
+type CredentialResponse = {
+  credential: string;
+};
+
+type GoogleAccountsId = {
+  initialize: (config: {
+    client_id: string;
+    callback: (response: CredentialResponse) => void;
+    nonce?: string;
+    use_fedcm_for_prompt?: boolean;
+    context?: "signin" | "signup" | "use";
+  }) => void;
+  renderButton: (
+    parent: HTMLElement,
+    options: {
+      type?: "standard" | "icon";
+      theme?: "outline" | "filled_blue" | "filled_black";
+      size?: "large" | "medium" | "small";
+      text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+      shape?: "rectangular" | "pill" | "circle" | "square";
+      logo_alignment?: "left" | "center";
+      width?: number;
+    }
+  ) => void;
+};
+
+declare global {
+  interface Window {
+    google?: { accounts: { id: GoogleAccountsId } };
+  }
+}
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -28,21 +65,115 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
+async function generateNonce(): Promise<[string, string]> {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  const nonce = btoa(String.fromCharCode(...bytes));
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(nonce)
+  );
+  const hashedNonce = Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return [nonce, hashedNonce];
+}
+
 type GoogleAuthButtonProps = {
   next?: string;
 };
 
 export function GoogleAuthButton({ next = "/account" }: GoogleAuthButtonProps) {
+  const router = useRouter();
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const nonceRef = useRef<string>("");
+  const [scriptReady, setScriptReady] = useState(false);
   const [loading, setLoading] = useState(false);
+  const missingClientId = !GOOGLE_CLIENT_ID;
 
-  async function handleGoogleAuth() {
+  const handleCredential = useCallback(
+    async (response: CredentialResponse) => {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: response.credential,
+          nonce: nonceRef.current,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        router.push(next);
+        router.refresh();
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Google sign-in failed.";
+        toast.error(message);
+        setLoading(false);
+      }
+    },
+    [next, router]
+  );
+
+  useEffect(() => {
+    if (!scriptReady || !GOOGLE_CLIENT_ID || !buttonRef.current) return;
+    if (!window.google?.accounts?.id) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      const [nonce, hashedNonce] = await generateNonce();
+      if (cancelled || !buttonRef.current || !window.google?.accounts?.id) return;
+
+      nonceRef.current = nonce;
+      buttonRef.current.innerHTML = "";
+
+      const width = Math.max(
+        280,
+        Math.floor(buttonRef.current.getBoundingClientRect().width)
+      );
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        nonce: hashedNonce,
+        context: "signin",
+        use_fedcm_for_prompt: true,
+        callback: (response) => {
+          void handleCredential(response);
+        },
+      });
+
+      window.google.accounts.id.renderButton(buttonRef.current, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "rectangular",
+        logo_alignment: "left",
+        width,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+      if (buttonRef.current) {
+        buttonRef.current.innerHTML = "";
+      }
+    };
+  }, [scriptReady, handleCredential]);
+
+  async function handleLegacyOAuth() {
     setLoading(true);
     const supabase = createClient();
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
-
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo },
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+      },
     });
 
     if (error) {
@@ -60,16 +191,40 @@ export function GoogleAuthButton({ next = "/account" }: GoogleAuthButtonProps) {
     toast.error("Could not start Google sign-in. Try again.");
   }
 
+  if (missingClientId) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        disabled={loading}
+        onClick={handleLegacyOAuth}
+      >
+        <GoogleIcon className="size-4 shrink-0" />
+        {loading ? "Redirecting..." : "Continue with Google"}
+      </Button>
+    );
+  }
+
   return (
-    <Button
-      type="button"
-      variant="outline"
-      className="w-full"
-      disabled={loading}
-      onClick={handleGoogleAuth}
-    >
-      <GoogleIcon className="size-4 shrink-0" />
-      {loading ? "Redirecting..." : "Continue with Google"}
-    </Button>
+    <>
+      <Script
+        src={GIS_SRC}
+        strategy="afterInteractive"
+        onReady={() => setScriptReady(true)}
+      />
+      <div className="relative w-full">
+        <div
+          ref={buttonRef}
+          className="flex min-h-10 w-full justify-center overflow-hidden"
+          aria-busy={loading}
+        />
+        {loading ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-background/70 text-sm text-muted-foreground">
+            Signing in…
+          </div>
+        ) : null}
+      </div>
+    </>
   );
 }

@@ -18,7 +18,7 @@ function assert(condition: boolean, label: string) {
   }
 }
 
-console.log("Ilfaaz Smoke Tests\n");
+console.log("ilfaaz Smoke Tests\n");
 
 console.log("Coupon math:");
 assert(computeCouponDiscount(100, "percent", 10) === 10, "10% of 100 = 10");

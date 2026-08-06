@@ -10,6 +10,6 @@ UPDATE store_settings SET value = '{
     {"label":"Cookies Notice","href":"/pages/about"},
     {"label":"Interest-Based Ads Notice","href":"/pages/about"}
   ],
-  "copyright": "© 1996-2026, Ilfaaz. All rights reserved."
+  "copyright": "© 1996-2026, ilfaaz. All rights reserved."
 }'::jsonb
 WHERE key = 'footer';

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Heart,
   MapPin,
   Menu,
   Search,
@@ -12,7 +13,9 @@ import {
 import { useState } from "react";
 import { IlfaazMark } from "@/components/store/ilfaaz-mark";
 import { MobileNavDrawer } from "@/components/store/mobile-nav-drawer";
+import { WishlistDrawer } from "@/components/store/wishlist-drawer";
 import { useCartStore } from "@/lib/store/cart";
+import { useWishlistStore } from "@/lib/store/wishlist";
 import type { NavMenuItem } from "@/lib/types";
 
 export function StoreHeader({
@@ -20,16 +23,21 @@ export function StoreHeader({
   megaMenu,
   secondaryNav,
   announcement,
+  userDisplayName = null,
 }: {
   siteName: string;
   megaMenu: NavMenuItem[];
   secondaryNav: NavMenuItem[];
   announcement?: { text?: string; isActive?: boolean };
+  userDisplayName?: string | null;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const totalItems = useCartStore((s) => s.totalItems());
+  const wishlistCount = useWishlistStore((s) => s.items.length);
+  const toggleWishlistDrawer = useWishlistStore((s) => s.toggleDrawer);
+  const signedIn = Boolean(userDisplayName);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -66,11 +74,26 @@ export function StoreHeader({
             <Link
               href="/account"
               className="flex shrink-0 items-center gap-0.5 px-1 py-1 text-xs text-white hover:text-white"
-              aria-label="Sign in"
+              aria-label={signedIn ? "Account" : "Sign in"}
             >
-              <span className="whitespace-nowrap">Sign in</span>
+              <span className="max-w-[4.5rem] truncate whitespace-nowrap">
+                {signedIn ? userDisplayName : "Sign in"}
+              </span>
               <User className="h-5 w-5" />
             </Link>
+            <button
+              type="button"
+              onClick={toggleWishlistDrawer}
+              className="relative flex shrink-0 items-center px-1 py-1"
+              aria-label="Wishlist"
+            >
+              <Heart className="h-6 w-6" />
+              {wishlistCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 rounded-full bg-accent px-1.5 text-[11px] font-bold leading-4 text-accent-foreground">
+                  {wishlistCount}
+                </span>
+              )}
+            </button>
             <Link
               href="/cart"
               className="relative flex shrink-0 items-center px-1 py-1"
@@ -161,7 +184,9 @@ export function StoreHeader({
             >
               <User className="h-5 w-5" />
               <div>
-                <div className="text-gray-300">Hello, sign in</div>
+                <div className="text-gray-300">
+                  {signedIn ? `Hello, ${userDisplayName}` : "Hello, sign in"}
+                </div>
                 <div className="font-bold">Account & Lists</div>
               </div>
             </Link>
@@ -173,6 +198,21 @@ export function StoreHeader({
               <div className="text-gray-300">Returns</div>
               <div className="font-bold">& Orders</div>
             </Link>
+
+            <button
+              type="button"
+              onClick={toggleWishlistDrawer}
+              className="relative flex shrink-0 items-end gap-1 px-2 py-1 hover:outline hover:outline-1 hover:outline-white"
+              aria-label="Wishlist"
+            >
+              <Heart className="h-7 w-7" />
+              {wishlistCount > 0 && (
+                <span className="absolute left-4 top-0 rounded-full bg-accent px-1.5 text-xs font-bold text-accent-foreground">
+                  {wishlistCount}
+                </span>
+              )}
+              <span className="hidden font-bold md:inline">Wishlist</span>
+            </button>
 
             <Link
               href="/cart"
@@ -216,7 +256,9 @@ export function StoreHeader({
         siteName={siteName}
         megaMenu={megaMenu}
         secondaryNav={secondaryNav}
+        userDisplayName={userDisplayName}
       />
+      <WishlistDrawer />
     </>
   );
 }

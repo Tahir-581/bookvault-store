@@ -9,14 +9,14 @@ const supabase = createClient(
 );
 
 const CATEGORIES = [
-  { name: "Fiction", slug: "fiction", description: "Novels and literary fiction" },
-  { name: "Non-Fiction", slug: "non-fiction", description: "Real-world stories and knowledge" },
-  { name: "Mystery", slug: "mystery", description: "Thrillers and detective stories" },
-  { name: "Romance", slug: "romance", description: "Love stories for every reader" },
-  { name: "Sci-Fi & Fantasy", slug: "sci-fi-fantasy", description: "Other worlds and futures" },
-  { name: "Children's Books", slug: "childrens", description: "Books for young readers" },
-  { name: "Biography", slug: "biography", description: "Lives of remarkable people" },
-  { name: "Self-Help", slug: "self-help", description: "Personal growth and wellness" },
+  { name: "Fiction", slug: "fiction", description: "Novels and literary fiction", show_on_homepage: true, homepage_sort_order: 0 },
+  { name: "Non-Fiction", slug: "non-fiction", description: "Real-world stories and knowledge", show_on_homepage: true, homepage_sort_order: 1 },
+  { name: "Mystery", slug: "mystery", description: "Thrillers and detective stories", show_on_homepage: true, homepage_sort_order: 2 },
+  { name: "Romance", slug: "romance", description: "Love stories for every reader", show_on_homepage: true, homepage_sort_order: 3 },
+  { name: "Sci-Fi & Fantasy", slug: "sci-fi-fantasy", description: "Other worlds and futures", show_on_homepage: false, homepage_sort_order: 0 },
+  { name: "Children's Books", slug: "childrens", description: "Books for young readers", show_on_homepage: false, homepage_sort_order: 0 },
+  { name: "Biography", slug: "biography", description: "Lives of remarkable people", show_on_homepage: true, homepage_sort_order: 4 },
+  { name: "Self-Help", slug: "self-help", description: "Personal growth and wellness", show_on_homepage: false, homepage_sort_order: 0 },
 ];
 
 function slugify(text: string) {
@@ -24,7 +24,7 @@ function slugify(text: string) {
 }
 
 async function seed() {
-  console.log("Seeding Ilfaaz store...");
+  console.log("Seeding ilfaaz store...");
 
   const categoryMap = new Map<string, string>();
   for (const cat of CATEGORIES) {
@@ -62,7 +62,7 @@ async function seed() {
         avg_rating: 3.5 + Math.random() * 1.5,
         review_count: Math.floor(Math.random() * 5000) + 100,
         is_active: true,
-        publisher: "Ilfaaz Publishing",
+        publisher: "ilfaaz Publishing",
         page_count: 250 + Math.floor(Math.random() * 300),
         language: "English",
         tags: [],
@@ -162,7 +162,7 @@ async function seed() {
 
   await supabase.from("store_content_pages").upsert(
     [
-      { slug: "about", title: "About Ilfaaz", body: "Ilfaaz is your destination for millions of books, delivered fast across the United Kingdom.", is_published: true },
+      { slug: "about", title: "About ilfaaz", body: "ilfaaz is your destination for millions of books, delivered fast across the United Kingdom.", is_published: true },
       { slug: "help", title: "Help Centre", body: "Need assistance? Contact our support team at help@ilfaaz.com", is_published: true },
       { slug: "returns", title: "Returns Policy", body: "You can return most items within 30 days of receipt for a full refund.", is_published: true },
     ],
@@ -202,11 +202,18 @@ async function seed() {
       sort_order: 4,
     },
     {
+      section_type: "category_shelves",
+      title: "Shop by category",
+      subtitle: null,
+      config: { limit: 12 },
+      sort_order: 5,
+    },
+    {
       section_type: "editorial",
-      title: "Why Ilfaaz?",
+      title: "Why ilfaaz?",
       subtitle: "Millions of titles, fast delivery, easy returns",
       config: { cta: { label: "Browse all books", href: "/books" } },
-      sort_order: 5,
+      sort_order: 6,
     },
   ];
 

@@ -17,6 +17,7 @@ const SECTION_TYPES = [
   "book_row",
   "carousel",
   "category_tiles",
+  "category_shelves",
   "editorial",
 ];
 
@@ -179,6 +180,9 @@ function SectionFields({ section }: { section?: HomepageSection }) {
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        <p className="mt-1 text-xs text-gray-500">
+          category_shelves auto-includes every active category or subcategory with at least Limit books. category_tiles is disabled.
+        </p>
       </div>
       <div>
         <Label>Filter</Label>

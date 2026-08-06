@@ -1,4 +1,4 @@
--- Ilfaaz Store Schema
+-- ilfaaz Store Schema
 
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
@@ -440,9 +440,9 @@ CREATE POLICY "Public read active coupons" ON store_coupons FOR SELECT USING (is
 
 -- Seed default settings
 INSERT INTO store_settings (key, value) VALUES
-  ('site', '{"name":"Ilfaaz","tagline":"Your favourite books, delivered fast","currency":"PKR","locale":"en-PK","primaryColor":"#B8863E","secondaryColor":"#4A1C2E","membershipName":"BookPass","freeShippingThreshold":25,"taxRate":0.20,"standardShipping":4,"expressShipping":8,"guestCheckout":true,"reviewsEnabled":true,"wishlistsEnabled":true,"membershipEnabled":true}'::jsonb),
+  ('site', '{"name":"ilfaaz","tagline":"Your favourite books, delivered fast","currency":"PKR","locale":"en-PK","primaryColor":"#B8863E","secondaryColor":"#4A1C2E","membershipName":"BookPass","freeShippingThreshold":25,"taxRate":0.20,"standardShipping":4,"expressShipping":8,"guestCheckout":true,"reviewsEnabled":true,"wishlistsEnabled":true,"membershipEnabled":true}'::jsonb),
   ('announcement', '{"text":"Free delivery on orders over Rs 25","isActive":true}'::jsonb),
-  ('footer', '{"columns":[{"title":"Get to Know Us","links":[{"label":"About Ilfaaz","href":"/pages/about"},{"label":"Careers","href":"/pages/careers"}]},{"title":"Let Us Help You","links":[{"label":"Help","href":"/pages/help"},{"label":"Returns","href":"/pages/returns"}]},{"title":"Payment","links":[{"label":"Payment Methods","href":"/pages/payment"}]}]}'::jsonb)
+  ('footer', '{"columns":[{"title":"Get to Know Us","links":[{"label":"About ilfaaz","href":"/pages/about"},{"label":"Careers","href":"/pages/careers"}]},{"title":"Let Us Help You","links":[{"label":"Help","href":"/pages/help"},{"label":"Returns","href":"/pages/returns"}]},{"title":"Payment","links":[{"label":"Payment Methods","href":"/pages/payment"}]}]}'::jsonb)
 ON CONFLICT (key) DO NOTHING;
 
 INSERT INTO store_memberships (name, description, price_monthly, benefits, free_shipping_threshold) VALUES

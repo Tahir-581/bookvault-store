@@ -4,7 +4,7 @@ import { ProductShelf } from "@/components/store/product-shelf";
 import {
   resolveSectionBooks,
   resolveSectionDeals,
-  getCategories,
+  getCategoriesForHomepageShelves,
 } from "@/lib/data/books";
 import type { HomepageSection, HomepageSectionConfig } from "@/lib/types";
 
@@ -15,15 +15,12 @@ export async function HomepageSectionRenderer({
   sections: HomepageSection[];
   membershipName?: string;
 }) {
-  const categories = await getCategories();
-
   return (
     <>
       {sections.map((section) => (
         <SectionBlock
           key={section.id}
           section={section}
-          categories={categories}
           membershipName={membershipName}
         />
       ))}
@@ -33,11 +30,9 @@ export async function HomepageSectionRenderer({
 
 async function SectionBlock({
   section,
-  categories,
   membershipName,
 }: {
   section: HomepageSection;
-  categories: Awaited<ReturnType<typeof getCategories>>;
   membershipName?: string;
 }) {
   const config = section.config || {};
@@ -47,28 +42,25 @@ async function SectionBlock({
       return null;
 
     case "category_tiles":
+      return null;
+
+    case "category_shelves": {
+      const limit = config.limit ?? 12;
+      const shelves = await getCategoriesForHomepageShelves(limit);
+
       return (
-        <section className="mb-6">
-          <h2 className="mb-2 text-xl font-bold text-foreground">
-            {section.title || "Explore categories"}
-          </h2>
-          <ul className="divide-y divide-border border-y border-border">
-            {categories.map((cat) => (
-              <li key={cat.id}>
-                <Link
-                  href={`/books?category=${cat.slug}`}
-                  className="flex items-center justify-between px-1 py-3.5 text-base text-link hover:underline"
-                >
-                  {cat.name}
-                  <span className="text-link" aria-hidden>
-                    ›
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <>
+          {shelves.map(({ category, books }) => (
+            <BookRowShelf
+              key={category.id}
+              title={category.name}
+              seeMoreHref={`/categories/${category.slug}`}
+              books={books}
+            />
+          ))}
+        </>
       );
+    }
 
     case "editorial":
       const cta = config.cta;

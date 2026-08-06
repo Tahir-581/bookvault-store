@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { signOutAction } from "@/actions/auth";
 import { isAdmin } from "@/lib/auth";
+import { getSiteConfig } from "@/lib/data/settings";
+import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -9,7 +11,7 @@ export default async function AccountPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const admin = await isAdmin();
+  const [admin, config] = await Promise.all([isAdmin(), getSiteConfig()]);
 
   const [{ count: orderCount }, { count: wishlistCount }] = await Promise.all([
     supabase.from("store_orders").select("*", { count: "exact", head: true }).eq("user_id", user!.id),
@@ -18,8 +20,17 @@ export default async function AccountPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="mb-2 text-2xl font-bold">Your Account</h1>
-      <p className="mb-6 text-gray-600">{user?.email}</p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="mb-2 text-2xl font-bold">Your Account</h1>
+          <p className="text-gray-600">{user?.email}</p>
+        </div>
+        <form action={signOutAction}>
+          <Button type="submit" variant="outline">
+            Sign out
+          </Button>
+        </form>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
@@ -41,7 +52,11 @@ export default async function AccountPage() {
       <div className="mt-6 grid gap-2 md:grid-cols-2">
         <Link href="/account/addresses" className="rounded border bg-white p-4 hover:shadow-sm">Your Addresses</Link>
         <Link href="/account/reviews" className="rounded border bg-white p-4 hover:shadow-sm">Your Reviews</Link>
-        <Link href="/account/membership" className="rounded border bg-white p-4 hover:shadow-sm">BookPass Membership</Link>
+        {config.membershipEnabled && (
+          <Link href="/account/membership" className="rounded border bg-white p-4 hover:shadow-sm">
+            {config.membershipName} Membership
+          </Link>
+        )}
         {admin && (
           <Link href="/admin" className="rounded border bg-secondary p-4 text-secondary-foreground hover:bg-nav-hover">Admin Dashboard</Link>
         )}

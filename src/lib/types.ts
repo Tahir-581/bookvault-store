@@ -82,6 +82,8 @@ export type Category = {
   image_url: string | null;
   sort_order: number;
   is_active: boolean;
+  show_on_homepage: boolean;
+  homepage_sort_order: number;
 };
 
 export type Review = {
@@ -138,7 +140,13 @@ export type HomepageSectionConfig = {
 
 export type HomepageSection = {
   id: string;
-  section_type: "carousel" | "category_tiles" | "book_row" | "editorial" | "filter_pills";
+  section_type:
+    | "carousel"
+    | "category_tiles"
+    | "category_shelves"
+    | "book_row"
+    | "editorial"
+    | "filter_pills";
   title: string | null;
   subtitle: string | null;
   config: HomepageSectionConfig;

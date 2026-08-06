@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
+import { getUser } from "@/lib/auth";
 import { SITE_TAB_TITLE } from "@/lib/constants";
 import {
   getAnnouncement,
@@ -10,6 +11,20 @@ import {
   getSiteConfig,
 } from "@/lib/data/settings";
 import "./globals.css";
+
+function accountDisplayName(user: {
+  email?: string | null;
+  user_metadata?: Record<string, unknown>;
+}): string {
+  const meta = user.user_metadata || {};
+  const fromMeta =
+    (typeof meta.full_name === "string" && meta.full_name.trim()) ||
+    (typeof meta.name === "string" && meta.name.trim()) ||
+    "";
+  if (fromMeta) return fromMeta.split(" ")[0]!;
+  const email = user.email || "";
+  return email.includes("@") ? email.split("@")[0]! : email || "there";
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -32,14 +47,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [config, announcement, megaMenu, secondaryNav, footer] =
+  const [config, announcement, megaMenu, secondaryNav, footer, user] =
     await Promise.all([
       getSiteConfig(),
       getAnnouncement(),
       getNavMenu("mega_menu"),
       getNavMenu("secondary"),
       getFooterConfig(),
+      getUser(),
     ]);
+
+  const userDisplayName = user ? accountDisplayName(user) : null;
 
   return (
     <html lang="en" className="h-full overflow-x-clip">
@@ -49,6 +67,7 @@ export default async function RootLayout({
           megaMenu={megaMenu}
           secondaryNav={secondaryNav}
           announcement={announcement}
+          userDisplayName={userDisplayName}
         />
         <main className="min-w-0 max-w-full flex-1 overflow-x-clip">{children}</main>
         <StoreFooter siteName={config.name} footer={footer} />

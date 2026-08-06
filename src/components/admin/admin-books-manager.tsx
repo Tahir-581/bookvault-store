@@ -9,7 +9,9 @@ import {
   deleteBookAction,
   deleteCategoryAction,
   deleteTagAction,
+  reorderHomepageCategoriesAction,
   updateBookAction,
+  updateCategoryHomepageAction,
 } from "@/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -556,6 +558,50 @@ export function AdminBooksManager({
     });
   }
 
+  function handleToggleHomepage(cat: Category) {
+    if (cat.parent_id) {
+      toast.error("Only top-level categories can appear on the homepage");
+      return;
+    }
+    startTransition(async () => {
+      const result = await updateCategoryHomepageAction(cat.id, !cat.show_on_homepage);
+      if (result && "error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(
+        cat.show_on_homepage ? "Removed from homepage" : "Added to homepage"
+      );
+      window.location.reload();
+    });
+  }
+
+  function handleReorderHomepage(categoryId: string, direction: "up" | "down") {
+    const featured = categories
+      .filter((c) => c.show_on_homepage && !c.parent_id)
+      .sort(
+        (a, b) =>
+          a.homepage_sort_order - b.homepage_sort_order ||
+          a.sort_order - b.sort_order ||
+          a.name.localeCompare(b.name)
+      );
+    const index = featured.findIndex((c) => c.id === categoryId);
+    if (index < 0) return;
+    const swap = direction === "up" ? index - 1 : index + 1;
+    if (swap < 0 || swap >= featured.length) return;
+    const next = [...featured];
+    [next[index], next[swap]] = [next[swap], next[index]];
+    startTransition(async () => {
+      const result = await reorderHomepageCategoriesAction(next.map((c) => c.id));
+      if (result && "error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Homepage order updated");
+      window.location.reload();
+    });
+  }
+
   function handleCreateTag(formData: FormData) {
     startTransition(async () => {
       const result = await createTagAction(formData);
@@ -630,6 +676,11 @@ export function AdminBooksManager({
       {/* Section B — Categories */}
       <section id="categories" className="scroll-mt-4">
         <h2 className="mb-3 text-lg font-bold">Manage Categories</h2>
+        <p className="mb-3 text-sm text-gray-600">
+          Only top-level categories can be featured on the homepage. Toggle
+          &quot;Show on homepage&quot; and reorder featured ones to control home
+          shelves and tiles.
+        </p>
         <form
           action={handleCreateCategory}
           className="mb-4 flex flex-wrap gap-4 rounded-lg bg-white p-4 shadow-sm"
@@ -646,25 +697,88 @@ export function AdminBooksManager({
           {categories.length === 0 ? (
             <li className="px-4 py-6 text-sm text-gray-500">No categories yet.</li>
           ) : (
-            categories.map((cat) => (
-              <li
-                key={cat.id}
-                className="flex items-center justify-between border-b px-4 py-3 last:border-0"
-              >
-                <div>
-                  <span className="font-medium">{cat.name}</span>
-                  <span className="ml-2 text-sm text-gray-500">/{cat.slug}</span>
-                </div>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  disabled={pending}
-                  onClick={() => handleDeleteCategory(cat.id)}
-                >
-                  Delete
-                </Button>
-              </li>
-            ))
+            (() => {
+              const featuredIds = categories
+                .filter((c) => c.show_on_homepage && !c.parent_id)
+                .sort(
+                  (a, b) =>
+                    a.homepage_sort_order - b.homepage_sort_order ||
+                    a.sort_order - b.sort_order ||
+                    a.name.localeCompare(b.name)
+                )
+                .map((c) => c.id);
+
+              return categories.map((cat) => {
+                const isTopLevel = !cat.parent_id;
+                const featuredIndex = featuredIds.indexOf(cat.id);
+                return (
+                  <li
+                    key={cat.id}
+                    className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 last:border-0"
+                  >
+                    <div>
+                      <span className="font-medium">{cat.name}</span>
+                      <span className="ml-2 text-sm text-gray-500">/{cat.slug}</span>
+                      {!isTopLevel && (
+                        <span className="ml-2 text-xs text-gray-400">(child)</span>
+                      )}
+                      {cat.show_on_homepage && isTopLevel && (
+                        <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
+                          Homepage #{featuredIndex + 1}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {isTopLevel && (
+                        <>
+                          <label className="flex items-center gap-1.5 text-sm text-gray-700">
+                            <input
+                              type="checkbox"
+                              checked={!!cat.show_on_homepage}
+                              disabled={pending}
+                              onChange={() => handleToggleHomepage(cat)}
+                            />
+                            Show on homepage
+                          </label>
+                          {cat.show_on_homepage && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={pending || featuredIndex <= 0}
+                                onClick={() => handleReorderHomepage(cat.id, "up")}
+                              >
+                                ↑
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={
+                                  pending ||
+                                  featuredIndex < 0 ||
+                                  featuredIndex >= featuredIds.length - 1
+                                }
+                                onClick={() => handleReorderHomepage(cat.id, "down")}
+                              >
+                                ↓
+                              </Button>
+                            </>
+                          )}
+                        </>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={pending}
+                        onClick={() => handleDeleteCategory(cat.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </li>
+                );
+              });
+            })()
           )}
         </ul>
       </section>

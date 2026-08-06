@@ -1,9 +1,12 @@
+import { notFound } from "next/navigation";
 import { getSiteConfig } from "@/lib/data/settings";
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 
 export default async function MembershipPage() {
   const config = await getSiteConfig();
+  if (!config.membershipEnabled) notFound();
+
   const supabase = await createClient();
   const { data: membership } = await supabase
     .from("store_memberships")

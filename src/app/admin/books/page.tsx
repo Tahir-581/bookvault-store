@@ -14,7 +14,7 @@ export default async function AdminBooksPage() {
     supabase.from("store_tags").select("id, name, slug, created_at").order("name"),
     supabase
       .from("store_categories")
-      .select("id, parent_id, name, slug, description, image_url, sort_order, is_active")
+      .select("id, parent_id, name, slug, description, image_url, sort_order, is_active, show_on_homepage, homepage_sort_order")
       .order("sort_order")
       .order("name"),
   ]);

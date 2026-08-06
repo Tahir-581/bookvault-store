@@ -1682,33 +1682,39 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          homepage_sort_order: number
           id: string
           image_url: string | null
           is_active: boolean
           name: string
           parent_id: string | null
+          show_on_homepage: boolean
           slug: string
           sort_order: number
         }
         Insert: {
           created_at?: string
           description?: string | null
+          homepage_sort_order?: number
           id?: string
           image_url?: string | null
           is_active?: boolean
           name: string
           parent_id?: string | null
+          show_on_homepage?: boolean
           slug: string
           sort_order?: number
         }
         Update: {
           created_at?: string
           description?: string | null
+          homepage_sort_order?: number
           id?: string
           image_url?: string | null
           is_active?: boolean
           name?: string
           parent_id?: string | null
+          show_on_homepage?: boolean
           slug?: string
           sort_order?: number
         }

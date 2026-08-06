@@ -46,7 +46,7 @@ export function AdminSidebar() {
       >
         {!collapsed && (
           <Link href="/admin" className="truncate text-lg font-bold">
-            Ilfaaz Admin
+            ilfaaz Admin
           </Link>
         )}
         <button
