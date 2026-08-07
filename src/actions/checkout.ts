@@ -197,7 +197,36 @@ export async function placeCodOrderAction(formData: {
     note: "Cash on Delivery order placed",
   });
 
-  await sendOrderConfirmationEmail(email, orderNumber, totals.grandTotal);
+  await sendOrderConfirmationEmail({
+    orderNumber,
+    email,
+    status: "pending",
+    paymentStatus: "unpaid",
+    isCod: true,
+    items: formData.items.map((item) => ({
+      title: item.title,
+      author: item.author,
+      format: item.format,
+      coverUrl: item.coverUrl,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+    })),
+    shipping: {
+      full_name: formData.shipping.full_name,
+      phone: formData.shipping.phone,
+      line1: formData.shipping.line1,
+      line2: formData.shipping.line2,
+      city: formData.shipping.city,
+      county: formData.shipping.county,
+      postcode: formData.shipping.postcode,
+      country: formData.shipping.country,
+    },
+    subtotal,
+    discountTotal: totals.discountTotal,
+    shippingFee: totals.shippingFee,
+    grandTotal: totals.grandTotal,
+    couponCode,
+  });
 
   return { orderNumber };
 }

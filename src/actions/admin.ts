@@ -185,7 +185,27 @@ export async function updateOrderStatusAction(
 
   const { data: order } = await supabase
     .from("store_orders")
-    .select("email, order_number")
+    .select(
+      `
+      email,
+      order_number,
+      payment_status,
+      subtotal,
+      discount_total,
+      shipping_fee,
+      grand_total,
+      coupon_code,
+      shipping_address,
+      store_order_items (
+        title,
+        author,
+        format,
+        cover_url,
+        unit_price,
+        quantity
+      )
+    `
+    )
     .eq("id", orderId)
     .single();
 
@@ -197,7 +217,46 @@ export async function updateOrderStatusAction(
   });
 
   if (order) {
-    await sendOrderStatusEmail(order.email, order.order_number, status);
+    const shipping =
+      order.shipping_address &&
+      typeof order.shipping_address === "object" &&
+      !Array.isArray(order.shipping_address)
+        ? (order.shipping_address as Record<string, string>)
+        : {};
+
+    await sendOrderStatusEmail(
+      {
+        orderNumber: order.order_number,
+        email: order.email,
+        status,
+        paymentStatus: order.payment_status,
+        isCod: order.payment_status === "unpaid",
+        items: (order.store_order_items || []).map((item) => ({
+          title: item.title,
+          author: item.author,
+          format: item.format,
+          coverUrl: item.cover_url,
+          unitPrice: item.unit_price,
+          quantity: item.quantity,
+        })),
+        shipping: {
+          full_name: shipping.full_name,
+          phone: shipping.phone,
+          line1: shipping.line1,
+          line2: shipping.line2,
+          city: shipping.city,
+          county: shipping.county,
+          postcode: shipping.postcode,
+          country: shipping.country,
+        },
+        subtotal: order.subtotal,
+        discountTotal: order.discount_total,
+        shippingFee: order.shipping_fee,
+        grandTotal: order.grand_total,
+        couponCode: order.coupon_code,
+      },
+      status
+    );
   }
 
   await logAdminAction("update_order_status", "order", orderId, { status });
