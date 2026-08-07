@@ -12,9 +12,15 @@ import {
 } from "@/lib/coupon";
 import { getSiteConfig } from "@/lib/data/settings";
 import { formatPrice, generateOrderNumber } from "@/lib/utils";
-import { stripe } from "@/lib/stripe";
-import { getSiteUrl } from "@/lib/site-url";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+
+const REQUIRED_SHIPPING_FIELDS = [
+  "full_name",
+  "phone",
+  "line1",
+  "city",
+  "county",
+] as const;
 
 export async function validateCouponAction(code: string, subtotal: number, email: string) {
   const supabase = await createClient();
@@ -58,7 +64,7 @@ export async function validateCouponAction(code: string, subtotal: number, email
   };
 }
 
-export async function createCheckoutSessionAction(formData: {
+export async function placeCodOrderAction(formData: {
   email: string;
   items: {
     bookId: string;
@@ -72,10 +78,42 @@ export async function createCheckoutSessionAction(formData: {
   }[];
   shipping: Record<string, string>;
   couponCode?: string;
-  deliverySpeed?: string;
-  giftMessage?: string;
-  giftWrap?: boolean;
 }) {
+  const email = normalizeEmail(formData.email);
+  if (!email || !email.includes("@")) {
+    return { error: "A valid email is required" };
+  }
+
+  if (!formData.items.length) {
+    return { error: "Your bag is empty" };
+  }
+
+  const fieldLabels: Record<(typeof REQUIRED_SHIPPING_FIELDS)[number], string> = {
+    full_name: "full name",
+    phone: "phone",
+    line1: "address line 1",
+    city: "city",
+    county: "state / province",
+  };
+
+  for (const field of REQUIRED_SHIPPING_FIELDS) {
+    const value = formData.shipping[field]?.trim();
+    if (!value) {
+      return { error: `Please fill in ${fieldLabels[field]}` };
+    }
+  }
+
+  const shipping = {
+    full_name: formData.shipping.full_name.trim(),
+    phone: formData.shipping.phone.trim(),
+    line1: formData.shipping.line1.trim(),
+    line2: (formData.shipping.line2 || "").trim(),
+    city: formData.shipping.city.trim(),
+    county: formData.shipping.county.trim(),
+    postcode: (formData.shipping.postcode || "").trim(),
+    country: "Pakistan",
+  };
+
   const config = await getSiteConfig();
   const user = await getUser();
   const subtotal = formData.items.reduce(
@@ -91,7 +129,7 @@ export async function createCheckoutSessionAction(formData: {
     const result = await validateCouponAction(
       formData.couponCode,
       subtotal,
-      formData.email
+      email
     );
     if ("error" in result && result.error) {
       return { error: result.error };
@@ -103,14 +141,9 @@ export async function createCheckoutSessionAction(formData: {
     }
   }
 
-  const shippingFee =
-    formData.deliverySpeed === "express"
-      ? config.expressShipping
-      : config.standardShipping;
-
   const totals = computeOrderTotals(subtotal, {
     discountTotal,
-    shippingFee,
+    shippingFee: config.standardShipping,
     taxRate: config.taxRate,
     freeShipping:
       freeShipping || subtotal >= config.freeShippingThreshold,
@@ -124,7 +157,7 @@ export async function createCheckoutSessionAction(formData: {
     .insert({
       order_number: orderNumber,
       user_id: user?.id || null,
-      email: normalizeEmail(formData.email),
+      email,
       status: "pending",
       payment_status: "unpaid",
       subtotal,
@@ -134,10 +167,10 @@ export async function createCheckoutSessionAction(formData: {
       grand_total: totals.grandTotal,
       currency: config.currency,
       coupon_code: couponCode,
-      shipping_address: formData.shipping,
-      gift_message: formData.giftMessage || null,
-      gift_wrap: formData.giftWrap || false,
-      delivery_speed: formData.deliverySpeed || "standard",
+      shipping_address: shipping,
+      gift_message: null,
+      gift_wrap: false,
+      delivery_speed: "standard",
     })
     .select()
     .single();
@@ -161,40 +194,12 @@ export async function createCheckoutSessionAction(formData: {
   await supabase.from("store_order_events").insert({
     order_id: order.id,
     status: "pending",
-    note: "Order placed",
+    note: "Cash on Delivery order placed",
   });
 
-  if (!stripe) {
-    await supabase
-      .from("store_orders")
-      .update({ status: "paid", payment_status: "paid" })
-      .eq("id", order.id);
-    await sendOrderConfirmationEmail(formData.email, orderNumber, totals.grandTotal);
-    return { orderNumber, demo: true };
-  }
+  await sendOrderConfirmationEmail(email, orderNumber, totals.grandTotal);
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    customer_email: formData.email,
-    line_items: formData.items.map((item) => ({
-      price_data: {
-        currency: config.currency.toLowerCase(),
-        product_data: { name: item.title },
-        unit_amount: Math.round(item.unitPrice * 100),
-      },
-      quantity: item.quantity,
-    })),
-    success_url: `${getSiteUrl()}/checkout/confirmation/${orderNumber}?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${getSiteUrl()}/cart`,
-    metadata: { orderNumber, orderId: order.id },
-  });
-
-  await supabase
-    .from("store_orders")
-    .update({ stripe_session_id: session.id })
-    .eq("id", order.id);
-
-  return { url: session.url, orderNumber };
+  return { orderNumber };
 }
 
 export async function logAdminAction(

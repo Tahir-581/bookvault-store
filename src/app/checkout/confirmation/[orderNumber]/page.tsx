@@ -22,7 +22,9 @@ export default async function ConfirmationPage({
     return (
       <div className="mx-auto max-w-lg px-4 py-12 text-center">
         <p>Order not found.</p>
-        <Link href="/"><Button className="mt-4">Go Home</Button></Link>
+        <Link href="/">
+          <Button className="mt-4">Go Home</Button>
+        </Link>
       </div>
     );
   }
@@ -38,7 +40,13 @@ export default async function ConfirmationPage({
         <p className="mt-4 text-lg font-medium">
           Total: {formatPrice(order.grand_total)}
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="mt-2 text-sm font-medium text-gray-700">
+          Payment method: Cash on Delivery (COD)
+        </p>
+        <p className="mt-1 text-sm text-gray-500">
+          Please pay in cash when your order is delivered.
+        </p>
+        <p className="mt-4 text-sm text-gray-500">
           A confirmation email will be sent to {order.email}
         </p>
         <div className="mt-6 flex justify-center gap-4">
@@ -57,7 +65,7 @@ export default async function ConfirmationPage({
           <div className="space-y-3">
             {order.store_order_events.map((event) => (
               <div key={event.id} className="flex gap-3 text-sm">
-                <div className="h-2 w-2 mt-1.5 rounded-full bg-accent" />
+                <div className="mt-1.5 h-2 w-2 rounded-full bg-accent" />
                 <div>
                   <p className="font-medium capitalize">{event.status}</p>
                   <p className="text-gray-500">{event.note}</p>

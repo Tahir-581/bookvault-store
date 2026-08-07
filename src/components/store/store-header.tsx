@@ -66,14 +66,14 @@ export function StoreHeader({
             </button>
             <Link
               href="/"
-              className="flex min-w-0 flex-1 items-center justify-center gap-2 text-white hover:text-white"
+              className="flex min-w-0 flex-1 items-center justify-center gap-2 !text-white hover:!text-white"
             >
               <IlfaazMark className="-ml-4 h-10 w-auto shrink-0" />
               <span className="truncate text-2xl font-bold">{siteName}</span>
             </Link>
             <Link
               href="/account"
-              className="flex shrink-0 items-center gap-0.5 px-1 py-1 text-xs text-white hover:text-white"
+              className="flex shrink-0 items-center gap-0.5 px-1 py-1 text-xs !text-white hover:!text-white"
               aria-label={signedIn ? "Account" : "Sign in"}
             >
               <span className="max-w-[4.5rem] truncate whitespace-nowrap">
@@ -96,7 +96,7 @@ export function StoreHeader({
             </button>
             <Link
               href="/cart"
-              className="relative flex shrink-0 items-center px-1 py-1"
+              className="relative flex shrink-0 items-center px-1 py-1 !text-white hover:!text-white"
               aria-label="Cart"
             >
               <ShoppingCart className="h-7 w-7" />
@@ -142,7 +142,7 @@ export function StoreHeader({
 
             <Link
               href="/"
-              className="flex max-w-[28vw] shrink-0 items-center gap-2 text-white hover:text-white sm:max-w-none"
+              className="flex max-w-[28vw] shrink-0 items-center gap-2 !text-white hover:!text-white sm:max-w-none"
             >
               <IlfaazMark className="-ml-4 h-11 w-auto shrink-0" />
               <span className="truncate text-xl font-bold">{siteName}</span>
@@ -180,7 +180,7 @@ export function StoreHeader({
 
             <Link
               href="/account"
-              className="hidden shrink-0 items-center gap-1 px-2 py-1 text-xs text-white hover:text-white hover:outline hover:outline-1 hover:outline-white md:flex"
+              className="hidden shrink-0 items-center gap-1 px-2 py-1 text-xs !text-white hover:!text-white hover:outline hover:outline-1 hover:outline-white md:flex"
             >
               <User className="h-5 w-5" />
               <div>
@@ -216,7 +216,7 @@ export function StoreHeader({
 
             <Link
               href="/cart"
-              className="relative flex shrink-0 items-end gap-1 px-2 py-1 hover:outline hover:outline-1 hover:outline-white"
+              className="relative flex shrink-0 items-end gap-1 px-2 py-1 !text-white hover:!text-white hover:outline hover:outline-1 hover:outline-white"
               aria-label="Cart"
             >
               <ShoppingCart className="h-8 w-8" />

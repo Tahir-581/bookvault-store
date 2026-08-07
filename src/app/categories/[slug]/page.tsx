@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { BooksMobileFilters, BooksSortSelect } from "@/components/store/books-mobile-filters";
 import { BooksSubNav } from "@/components/store/books-sub-nav";
 import { FilterSidebar } from "@/components/store/filter-sidebar";
-import { ProductCard } from "@/components/store/product-card";
+import { InfiniteProductGrid } from "@/components/store/infinite-product-grid";
 import { getBooks, getCategories, getCategoryBySlug } from "@/lib/data/books";
 import { getBooksSubNav } from "@/lib/data/settings";
 
@@ -20,21 +20,21 @@ export default async function CategoryPage({
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const [categories, booksSubNav, { books, total, page, pageSize }] = await Promise.all([
+  const filters = {
+    q: query.q,
+    category: slug,
+    minPrice: query.minPrice ? Number(query.minPrice) : undefined,
+    maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
+    minRating: query.minRating ? Number(query.minRating) : undefined,
+    sort: query.sort,
+  };
+
+  const [categories, booksSubNav, { books, total, pageSize }] = await Promise.all([
     getCategories(),
     getBooksSubNav(),
-    getBooks({
-      q: query.q,
-      category: slug,
-      minPrice: query.minPrice ? Number(query.minPrice) : undefined,
-      maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
-      minRating: query.minRating ? Number(query.minRating) : undefined,
-      sort: query.sort,
-      page: query.page ? Number(query.page) : 1,
-    }),
+    getBooks({ ...filters, page: 1 }),
   ]);
 
-  const totalPages = Math.ceil(total / pageSize);
   const filterParams = { ...query, category: slug };
 
   return (
@@ -82,47 +82,13 @@ export default async function CategoryPage({
               {total} result{total !== 1 ? "s" : ""}
             </p>
 
-            {books.length === 0 ? (
-              <div className="rounded border border-border bg-card p-12 text-center">
-                <p className="text-lg text-muted-foreground">
-                  No books found in this category.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
-                {books.map((book) => (
-                  <ProductCard
-                    key={book.id}
-                    book={book}
-                    variant="storefront"
-                    className="!w-full"
-                  />
-                ))}
-              </div>
-            )}
-
-            {totalPages > 1 && (
-              <div className="mt-6 flex justify-center gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <Link
-                    key={p}
-                    href={`?${new URLSearchParams({
-                      ...Object.fromEntries(
-                        Object.entries(query).filter(([, v]) => v != null)
-                      ),
-                      page: String(p),
-                    }).toString()}`}
-                    className={`rounded px-3 py-1 text-sm ${
-                      p === page
-                        ? "bg-secondary font-bold text-secondary-foreground"
-                        : "bg-card text-link hover:bg-muted"
-                    }`}
-                  >
-                    {p}
-                  </Link>
-                ))}
-              </div>
-            )}
+            <InfiniteProductGrid
+              initialBooks={books}
+              total={total}
+              pageSize={pageSize}
+              filters={filters}
+              emptyMessage="No books found in this category."
+            />
           </div>
         </div>
       </div>

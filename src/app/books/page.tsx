@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { BooksMobileFilters, BooksSortSelect } from "@/components/store/books-mobile-filters";
 import { BooksSubNav } from "@/components/store/books-sub-nav";
 import { FilterSidebar } from "@/components/store/filter-sidebar";
-import { ProductCard } from "@/components/store/product-card";
+import { InfiniteProductGrid } from "@/components/store/infinite-product-grid";
 import { getBooks, getCategories } from "@/lib/data/books";
 import { getBooksSubNav } from "@/lib/data/settings";
 
@@ -13,21 +13,20 @@ export default async function BooksPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
-  const [categories, booksSubNav, { books, total, page, pageSize }] = await Promise.all([
+  const filters = {
+    q: params.q,
+    category: params.category,
+    minPrice: params.minPrice ? Number(params.minPrice) : undefined,
+    maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
+    minRating: params.minRating ? Number(params.minRating) : undefined,
+    sort: params.sort,
+  };
+
+  const [categories, booksSubNav, { books, total, pageSize }] = await Promise.all([
     getCategories(),
     getBooksSubNav(),
-    getBooks({
-      q: params.q,
-      category: params.category,
-      minPrice: params.minPrice ? Number(params.minPrice) : undefined,
-      maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
-      minRating: params.minRating ? Number(params.minRating) : undefined,
-      sort: params.sort,
-      page: params.page ? Number(params.page) : 1,
-    }),
+    getBooks({ ...filters, page: 1 }),
   ]);
-
-  const totalPages = Math.ceil(total / pageSize);
 
   return (
     <>
@@ -66,42 +65,13 @@ export default async function BooksPage({
               {total} result{total !== 1 ? "s" : ""}
             </p>
 
-            {books.length === 0 ? (
-              <div className="rounded border border-border bg-card p-12 text-center">
-                <p className="text-lg text-muted-foreground">
-                  No books found. Try adjusting your filters.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
-                {books.map((book) => (
-                  <ProductCard
-                    key={book.id}
-                    book={book}
-                    variant="storefront"
-                    className="!w-full"
-                  />
-                ))}
-              </div>
-            )}
-
-            {totalPages > 1 && (
-              <div className="mt-6 flex justify-center gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <Link
-                    key={p}
-                    href={`?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
-                    className={`rounded px-3 py-1 text-sm ${
-                      p === page
-                        ? "bg-secondary font-bold text-secondary-foreground"
-                        : "bg-card text-link hover:bg-muted"
-                    }`}
-                  >
-                    {p}
-                  </Link>
-                ))}
-              </div>
-            )}
+            <InfiniteProductGrid
+              initialBooks={books}
+              total={total}
+              pageSize={pageSize}
+              filters={filters}
+              emptyMessage="No books found. Try adjusting your filters."
+            />
           </div>
         </div>
       </div>
