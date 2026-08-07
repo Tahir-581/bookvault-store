@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  OrderItemsList,
+  OrderTotals,
+  ShippingAddressCard,
+  OrderTimeline,
+  type OrderItemDisplay,
+  type OrderEventDisplay,
+} from "@/components/orders";
 import { createServiceClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 
@@ -29,13 +37,17 @@ export default async function ConfirmationPage({
     );
   }
 
+  const items = (order.store_order_items || []) as OrderItemDisplay[];
+  const events = (order.store_order_events || []) as OrderEventDisplay[];
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="rounded-lg bg-white p-8 text-center shadow-sm">
         <CheckCircle className="mx-auto h-16 w-16 text-success" />
         <h1 className="mt-4 text-2xl font-bold">Order Placed!</h1>
         <p className="mt-2 text-gray-600">
-          Thank you. Your order <strong>{orderNumber}</strong> has been confirmed.
+          Thank you. Your order <strong>{orderNumber}</strong> has been
+          confirmed.
         </p>
         <p className="mt-4 text-lg font-medium">
           Total: {formatPrice(order.grand_total)}
@@ -49,7 +61,7 @@ export default async function ConfirmationPage({
         <p className="mt-4 text-sm text-gray-500">
           A confirmation email will be sent to {order.email}
         </p>
-        <div className="mt-6 flex justify-center gap-4">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href="/account/orders">
             <Button variant="outline">View Orders</Button>
           </Link>
@@ -59,25 +71,22 @@ export default async function ConfirmationPage({
         </div>
       </div>
 
-      {order.store_order_events && order.store_order_events.length > 0 && (
-        <div className="mt-6 rounded-lg bg-white p-6 shadow-sm">
-          <h2 className="mb-4 font-bold">Order Timeline</h2>
-          <div className="space-y-3">
-            {order.store_order_events.map((event) => (
-              <div key={event.id} className="flex gap-3 text-sm">
-                <div className="mt-1.5 h-2 w-2 rounded-full bg-accent" />
-                <div>
-                  <p className="font-medium capitalize">{event.status}</p>
-                  <p className="text-gray-500">{event.note}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(event.created_at).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="space-y-6">
+          <OrderItemsList items={items} size="lg" />
+          <ShippingAddressCard address={order.shipping_address} />
         </div>
-      )}
+
+        <div className="space-y-6">
+          <OrderTotals
+            subtotal={order.subtotal}
+            shippingFee={order.shipping_fee}
+            discountTotal={order.discount_total}
+            grandTotal={order.grand_total}
+          />
+          <OrderTimeline events={events} />
+        </div>
+      </div>
     </div>
   );
 }
