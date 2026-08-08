@@ -9,11 +9,13 @@ export function BottomSheet({
   onClose,
   title,
   children,
+  footer,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  footer?: ReactNode;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -43,7 +45,7 @@ export function BottomSheet({
         aria-label="Close"
         onClick={onClose}
       />
-      <div className="absolute inset-x-0 bottom-0 flex max-h-[75vh] flex-col rounded-t-xl bg-card shadow-2xl">
+      <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-xl bg-card shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
           <h2 className="text-lg font-bold text-foreground">{title}</h2>
           <button
@@ -56,6 +58,11 @@ export function BottomSheet({
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
+        {footer ? (
+          <div className="shrink-0 border-t border-border bg-card px-4 py-3">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -2,11 +2,13 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { BookDetailClient } from "@/components/store/book-detail-client";
 import { SITE_TAB_TITLE } from "@/lib/constants";
+import { getUser } from "@/lib/auth";
 import {
   getBookBySlug,
   getBookReviews,
   getRelatedBooks,
 } from "@/lib/data/books";
+import { userHasDeliveredBook } from "@/lib/data/orders";
 import { getEffectivePrice } from "@/lib/pricing";
 import type { BookWithFormats } from "@/lib/types";
 
@@ -20,9 +22,11 @@ export default async function ProductPage({
   if (!book) notFound();
 
   const categoryIds = book.categories?.map((c) => c.id) || [];
-  const [reviews, related] = await Promise.all([
+  const user = await getUser();
+  const [reviews, related, canReview] = await Promise.all([
     getBookReviews(book.id),
     getRelatedBooks(book.id, categoryIds),
+    user ? userHasDeliveredBook(user.id, book.id) : Promise.resolve(false),
   ]);
 
   const jsonLd = {
@@ -60,6 +64,8 @@ export default async function ProductPage({
         book={book as unknown as BookWithFormats & { images?: { url: string; alt: string | null }[]; categories?: { id: string; name: string; slug: string }[] }}
         reviews={reviews}
         related={related}
+        canReview={canReview}
+        isSignedIn={Boolean(user)}
       />
     </>
   );

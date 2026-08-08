@@ -8,6 +8,7 @@ export default async function CheckoutPage() {
   return (
     <CheckoutClient
       initialEmail={user?.email || ""}
+      isSignedIn={Boolean(user)}
       standardShipping={config.standardShipping}
       freeShippingThreshold={config.freeShippingThreshold}
       taxRate={config.taxRate}

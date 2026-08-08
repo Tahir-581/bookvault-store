@@ -4,7 +4,8 @@ import { BooksMobileFilters, BooksSortSelect } from "@/components/store/books-mo
 import { BooksSubNav } from "@/components/store/books-sub-nav";
 import { FilterSidebar } from "@/components/store/filter-sidebar";
 import { InfiniteProductGrid } from "@/components/store/infinite-product-grid";
-import { getBooks, getCategories } from "@/lib/data/books";
+import { getBooks, getCategories, getFilterFacets } from "@/lib/data/books";
+import { parseOptionalNumber } from "@/lib/filter-params";
 import { getBooksSubNav } from "@/lib/data/settings";
 
 export default async function BooksPage({
@@ -16,17 +17,22 @@ export default async function BooksPage({
   const filters = {
     q: params.q,
     category: params.category,
-    minPrice: params.minPrice ? Number(params.minPrice) : undefined,
-    maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
-    minRating: params.minRating ? Number(params.minRating) : undefined,
+    minPrice: parseOptionalNumber(params.minPrice),
+    maxPrice: parseOptionalNumber(params.maxPrice),
+    minRating: parseOptionalNumber(params.minRating),
+    onSale: params.onSale === "1",
+    language: params.language,
+    author: params.author,
     sort: params.sort,
   };
 
-  const [categories, booksSubNav, { books, total, pageSize }] = await Promise.all([
-    getCategories(),
-    getBooksSubNav(),
-    getBooks({ ...filters, page: 1 }),
-  ]);
+  const [categories, booksSubNav, facets, { books, total, pageSize }] =
+    await Promise.all([
+      getCategories(),
+      getBooksSubNav(),
+      getFilterFacets(),
+      getBooks({ ...filters, page: 1 }),
+    ]);
 
   return (
     <>
@@ -41,17 +47,25 @@ export default async function BooksPage({
         </div>
 
         <Suspense fallback={null}>
-          <BooksMobileFilters categories={categories} currentFilters={params} />
+          <BooksMobileFilters
+            categories={categories}
+            currentFilters={params}
+            facets={facets}
+          />
         </Suspense>
 
         <div className="flex flex-col gap-6 lg:flex-row">
           <div className="hidden lg:block">
             <Suspense fallback={null}>
-              <FilterSidebar categories={categories} currentFilters={params} />
+              <FilterSidebar
+                categories={categories}
+                currentFilters={params}
+                facets={facets}
+              />
             </Suspense>
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="mb-3 hidden items-center justify-between rounded border border-border bg-card p-3 lg:flex">
               <p className="text-sm text-muted-foreground">
                 {total} result{total !== 1 ? "s" : ""}

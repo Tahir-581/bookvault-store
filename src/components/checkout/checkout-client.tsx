@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 type CheckoutClientProps = {
   initialEmail?: string;
+  isSignedIn?: boolean;
   standardShipping: number;
   freeShippingThreshold: number;
   taxRate: number;
@@ -29,6 +30,7 @@ function isValidEmail(email: string) {
 
 export function CheckoutClient({
   initialEmail = "",
+  isSignedIn = false,
   standardShipping,
   freeShippingThreshold,
   taxRate,
@@ -199,36 +201,42 @@ export function CheckoutClient({
   }
 
   return (
-    <div className="mx-auto max-w-[1500px] px-4 py-8">
-      <div className="grid gap-8 lg:grid-cols-5">
-        <div className="space-y-3 lg:col-span-3">
+    <div className="mx-auto max-w-[1500px] px-3 py-8 sm:px-4">
+      <div className="grid min-w-0 gap-8 lg:grid-cols-5">
+        <div className="min-w-0 space-y-3 lg:col-span-3">
           {/* Step 1: Email */}
-          <section className="rounded-lg bg-white p-5 shadow-sm">
+          <section className="rounded-lg bg-white p-4 shadow-sm sm:p-5">
             <button
               type="button"
-              className="flex w-full items-center justify-between text-left"
+              className="flex w-full items-center justify-between gap-2 text-left"
               onClick={() => setStep(1)}
             >
-              <h2 className="text-lg font-bold uppercase tracking-wide">
+              <h2 className="min-w-0 text-lg font-bold uppercase tracking-wide">
                 1. Enter email
               </h2>
               {step === 1 ? (
-                <ChevronUp className="h-5 w-5 text-gray-500" />
+                <ChevronUp className="h-5 w-5 shrink-0 text-gray-500" />
               ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500" />
+                <ChevronDown className="h-5 w-5 shrink-0 text-gray-500" />
               )}
             </button>
             {step === 1 && (
               <div className="mt-4 space-y-4">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{" "}
-                  <Link
-                    href="/auth/login?next=/checkout"
-                    className="font-medium text-link underline hover:text-link-hover"
-                  >
-                    Sign in
-                  </Link>
-                </p>
+                {isSignedIn ? (
+                  <p className="text-sm text-gray-600">
+                    Currently logged in as {initialEmail}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    Already have an account?{" "}
+                    <Link
+                      href="/auth/login?next=/checkout"
+                      className="font-medium text-link underline hover:text-link-hover"
+                    >
+                      Sign in
+                    </Link>
+                  </p>
+                )}
                 <div>
                   <Label htmlFor="checkout-email">Email *</Label>
                   <Input
@@ -246,30 +254,30 @@ export function CheckoutClient({
               </div>
             )}
             {step !== 1 && form.email && (
-              <p className="mt-2 text-sm text-gray-600">{form.email}</p>
+              <p className="mt-2 break-words text-sm text-gray-600">{form.email}</p>
             )}
           </section>
 
           {/* Step 2: Shipping */}
           <section
             className={cn(
-              "rounded-lg bg-white p-5 shadow-sm",
+              "rounded-lg bg-white p-4 shadow-sm sm:p-5",
               step < 2 && "opacity-70"
             )}
           >
             <button
               type="button"
-              className="flex w-full items-center justify-between text-left"
+              className="flex w-full items-center justify-between gap-2 text-left"
               onClick={() => openStep(2)}
               disabled={!isValidEmail(form.email) && step < 2}
             >
-              <h2 className="text-lg font-bold uppercase tracking-wide">
+              <h2 className="min-w-0 text-lg font-bold uppercase tracking-wide">
                 2. Shipping
               </h2>
               {step === 2 ? (
-                <ChevronUp className="h-5 w-5 text-gray-500" />
+                <ChevronUp className="h-5 w-5 shrink-0 text-gray-500" />
               ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500" />
+                <ChevronDown className="h-5 w-5 shrink-0 text-gray-500" />
               )}
             </button>
             {step === 2 && (
@@ -315,7 +323,7 @@ export function CheckoutClient({
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
+                  <div className="min-w-0">
                     <Label htmlFor="city">City *</Label>
                     <Input
                       id="city"
@@ -325,7 +333,7 @@ export function CheckoutClient({
                       required
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <Label htmlFor="county">State / Province *</Label>
                     <Input
                       id="county"
@@ -337,7 +345,7 @@ export function CheckoutClient({
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
+                  <div className="min-w-0">
                     <Label htmlFor="postcode">Postal code</Label>
                     <Input
                       id="postcode"
@@ -346,7 +354,7 @@ export function CheckoutClient({
                       onChange={(e) => updateField("postcode", e.target.value)}
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <Label htmlFor="country">Country</Label>
                     <Input id="country" value="Pakistan" disabled readOnly />
                   </div>
@@ -357,7 +365,7 @@ export function CheckoutClient({
               </div>
             )}
             {step > 2 && form.full_name && (
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 break-words text-sm text-gray-600">
                 {form.full_name}, {form.city}, {form.county}, Pakistan
               </p>
             )}
@@ -366,35 +374,35 @@ export function CheckoutClient({
           {/* Step 3: Payment */}
           <section
             className={cn(
-              "rounded-lg bg-white p-5 shadow-sm",
+              "rounded-lg bg-white p-4 shadow-sm sm:p-5",
               step < 3 && "opacity-70"
             )}
           >
             <button
               type="button"
-              className="flex w-full items-center justify-between text-left"
+              className="flex w-full items-center justify-between gap-2 text-left"
               onClick={() => openStep(3)}
             >
-              <h2 className="text-lg font-bold uppercase tracking-wide">
+              <h2 className="min-w-0 text-lg font-bold uppercase tracking-wide">
                 3. Payment
               </h2>
               {step === 3 ? (
-                <ChevronUp className="h-5 w-5 text-gray-500" />
+                <ChevronUp className="h-5 w-5 shrink-0 text-gray-500" />
               ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500" />
+                <ChevronDown className="h-5 w-5 shrink-0 text-gray-500" />
               )}
             </button>
             {step === 3 && (
               <div className="mt-4 space-y-4">
-                <label className="flex cursor-default items-start gap-3 rounded border border-gray-200 p-4">
+                <label className="flex cursor-default items-start gap-3 rounded border border-gray-200 p-3 sm:p-4">
                   <input
                     type="radio"
                     name="payment"
                     checked
                     readOnly
-                    className="mt-1"
+                    className="mt-1 shrink-0"
                   />
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-medium">Cash on Delivery (COD)</p>
                     <p className="mt-1 text-sm text-gray-600">
                       Pay in cash when your order is delivered. No card payment
@@ -415,7 +423,7 @@ export function CheckoutClient({
           </section>
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="min-w-0 max-w-full lg:col-span-2">
           <CheckoutOrderSummary
             items={items}
             itemCount={totalItems()}

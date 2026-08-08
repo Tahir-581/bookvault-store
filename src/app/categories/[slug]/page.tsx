@@ -5,7 +5,13 @@ import { BooksMobileFilters, BooksSortSelect } from "@/components/store/books-mo
 import { BooksSubNav } from "@/components/store/books-sub-nav";
 import { FilterSidebar } from "@/components/store/filter-sidebar";
 import { InfiniteProductGrid } from "@/components/store/infinite-product-grid";
-import { getBooks, getCategories, getCategoryBySlug } from "@/lib/data/books";
+import {
+  getBooks,
+  getCategories,
+  getCategoryBySlug,
+  getFilterFacets,
+} from "@/lib/data/books";
+import { parseOptionalNumber } from "@/lib/filter-params";
 import { getBooksSubNav } from "@/lib/data/settings";
 
 export default async function CategoryPage({
@@ -23,17 +29,22 @@ export default async function CategoryPage({
   const filters = {
     q: query.q,
     category: slug,
-    minPrice: query.minPrice ? Number(query.minPrice) : undefined,
-    maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
-    minRating: query.minRating ? Number(query.minRating) : undefined,
+    minPrice: parseOptionalNumber(query.minPrice),
+    maxPrice: parseOptionalNumber(query.maxPrice),
+    minRating: parseOptionalNumber(query.minRating),
+    onSale: query.onSale === "1",
+    language: query.language,
+    author: query.author,
     sort: query.sort,
   };
 
-  const [categories, booksSubNav, { books, total, pageSize }] = await Promise.all([
-    getCategories(),
-    getBooksSubNav(),
-    getBooks({ ...filters, page: 1 }),
-  ]);
+  const [categories, booksSubNav, facets, { books, total, pageSize }] =
+    await Promise.all([
+      getCategories(),
+      getBooksSubNav(),
+      getFilterFacets(),
+      getBooks({ ...filters, page: 1 }),
+    ]);
 
   const filterParams = { ...query, category: slug };
 
@@ -58,13 +69,23 @@ export default async function CategoryPage({
         )}
 
         <Suspense fallback={null}>
-          <BooksMobileFilters categories={categories} currentFilters={filterParams} />
+          <BooksMobileFilters
+            categories={categories}
+            currentFilters={filterParams}
+            facets={facets}
+            lockedCategory
+          />
         </Suspense>
 
         <div className="flex flex-col gap-6 lg:flex-row">
           <div className="hidden lg:block">
             <Suspense fallback={null}>
-              <FilterSidebar categories={categories} currentFilters={filterParams} />
+              <FilterSidebar
+                categories={categories}
+                currentFilters={filterParams}
+                facets={facets}
+                lockedCategory
+              />
             </Suspense>
           </div>
 

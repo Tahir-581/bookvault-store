@@ -9,12 +9,57 @@ export type BookFilters = {
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
+  onSale?: boolean;
+  language?: string;
+  author?: string;
   sort?: string;
   page?: number;
   limit?: number;
 };
 
+export type FilterFacets = {
+  languages: string[];
+  authors: string[];
+};
+
+function minBookPrice(book: BookWithFormats): number {
+  const prices = book.formats.map((f) => getEffectivePrice(f).displayPrice);
+  return prices.length ? Math.min(...prices) : 0;
+}
+
+function bookHasActiveSale(book: BookWithFormats): boolean {
+  return book.formats.some((f) => getEffectivePrice(f).onSale);
+}
+
+function matchesPriceFilters(
+  book: BookWithFormats,
+  minPrice?: number,
+  maxPrice?: number
+): boolean {
+  const min = minBookPrice(book);
+  if (minPrice != null && min < minPrice) return false;
+  if (maxPrice != null && min > maxPrice) return false;
+  return true;
+}
+
+function needsFormatLevelPass(filters: BookFilters): boolean {
+  return Boolean(
+    filters.minPrice != null ||
+      filters.maxPrice != null ||
+      filters.onSale ||
+      filters.sort === "price_asc" ||
+      filters.sort === "price_desc"
+  );
+}
+
 const PAGE_SIZE = 24;
+const HOMEPAGE_MAX_PRICE = 1140;
+
+function isWithinHomepageMaxPrice(book: BookWithFormats): boolean {
+  const prices = book.formats.map((f) => getEffectivePrice(f).displayPrice);
+  if (prices.length === 0) return false;
+  return Math.min(...prices) <= HOMEPAGE_MAX_PRICE;
+}
 
 function hasSupabase() {
   return Boolean(
@@ -48,6 +93,30 @@ export async function getTags(): Promise<Tag[]> {
   return (data || []) as Tag[];
 }
 
+export async function getFilterFacets(): Promise<FilterFacets> {
+  if (!hasSupabase()) return { languages: [], authors: [] };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("store_books")
+    .select("language, author_name")
+    .eq("is_active", true);
+  if (error) throw error;
+
+  const languages = new Set<string>();
+  const authors = new Set<string>();
+  for (const row of data || []) {
+    const lang = (row.language || "").trim();
+    if (lang) languages.add(lang);
+    const author = (row.author_name || "").trim();
+    if (author) authors.add(author);
+  }
+
+  return {
+    languages: [...languages].sort((a, b) => a.localeCompare(b)),
+    authors: [...authors].sort((a, b) => a.localeCompare(b)),
+  };
+}
+
 export async function getBooks(filters: BookFilters = {}) {
   if (!hasSupabase()) {
     return { books: [], total: 0, page: 1, pageSize: PAGE_SIZE };
@@ -57,6 +126,7 @@ export async function getBooks(filters: BookFilters = {}) {
   const limit = filters.limit || PAGE_SIZE;
   const from = (page - 1) * limit;
   const to = from + limit - 1;
+  const formatPass = needsFormatLevelPass(filters);
 
   let categoryBookIds: string[] | null = null;
   if (filters.category) {
@@ -93,12 +163,20 @@ export async function getBooks(filters: BookFilters = {}) {
     query = query.gte("avg_rating", filters.minRating);
   }
 
-  switch (filters.sort) {
+  if (filters.language) {
+    query = query.eq("language", filters.language);
+  }
+
+  if (filters.author) {
+    query = query.eq("author_name", filters.author);
+  }
+
+  const sqlSort = filters.sort;
+  switch (sqlSort) {
     case "price_asc":
-      query = query.order("avg_rating", { ascending: false });
-      break;
     case "price_desc":
-      query = query.order("avg_rating", { ascending: false });
+      // Applied in memory after formats load
+      query = query.order("created_at", { ascending: false });
       break;
     case "newest":
       query = query.order("created_at", { ascending: false });
@@ -122,7 +200,9 @@ export async function getBooks(filters: BookFilters = {}) {
       });
   }
 
-  const { data, count, error } = await query.range(from, to);
+  const { data, count, error } = formatPass
+    ? await query
+    : await query.range(from, to);
   if (error) throw error;
 
   const tagMap = await getTagMap();
@@ -136,14 +216,30 @@ export async function getBooks(filters: BookFilters = {}) {
     )
   );
 
-  if (filters.minPrice || filters.maxPrice) {
-    books = books.filter((b) => {
-      const prices = b.formats.map((f) => getEffectivePrice(f).displayPrice);
-      const min = prices.length ? Math.min(...prices) : 0;
-      if (filters.minPrice && min < filters.minPrice) return false;
-      if (filters.maxPrice && min > filters.maxPrice) return false;
-      return true;
-    });
+  if (filters.onSale) {
+    books = books.filter(bookHasActiveSale);
+  }
+
+  if (filters.minPrice != null || filters.maxPrice != null) {
+    books = books.filter((b) =>
+      matchesPriceFilters(b, filters.minPrice, filters.maxPrice)
+    );
+  }
+
+  if (sqlSort === "price_asc") {
+    books = [...books].sort((a, b) => minBookPrice(a) - minBookPrice(b));
+  } else if (sqlSort === "price_desc") {
+    books = [...books].sort((a, b) => minBookPrice(b) - minBookPrice(a));
+  }
+
+  if (formatPass) {
+    const total = books.length;
+    return {
+      books: books.slice(from, from + limit),
+      total,
+      page,
+      pageSize: limit,
+    };
   }
 
   return { books, total: count || 0, page, pageSize: limit };
@@ -300,7 +396,7 @@ export async function getCategoriesForHomepageShelves(minBooks = 12) {
     const shelfBooks: BookWithFormats[] = [];
     for (const id of ids) {
       const book = bookById.get(id);
-      if (!book) continue;
+      if (!book || !isWithinHomepageMaxPrice(book)) continue;
       shelfBooks.push(book);
       if (shelfBooks.length >= minBooks) break;
     }
@@ -415,19 +511,24 @@ export async function getActiveDealsWithBooks(limit = 12): Promise<DealWithBook[
 
 export async function resolveSectionBooks(config: HomepageSectionConfig) {
   const limit = config.limit ?? 12;
+  const oversample = limit * 3;
 
   if (config.book_ids?.length) {
     const books = await getBooksByIds(config.book_ids);
-    return books.slice(0, limit);
+    return books.filter(isWithinHomepageMaxPrice).slice(0, limit);
   }
 
   if (config.filter === "deals" || config.source === "deals") {
-    const deals = await getActiveDealsWithBooks(limit);
-    return deals.map((d) => d.book);
+    const deals = await getActiveDealsWithBooks(oversample);
+    return deals
+      .filter((d) => d.deal_price <= HOMEPAGE_MAX_PRICE)
+      .map((d) => d.book)
+      .slice(0, limit);
   }
 
   if (config.category) {
-    return getBooksByCategory(config.category, limit);
+    const books = await getBooksByCategory(config.category, oversample);
+    return books.filter(isWithinHomepageMaxPrice).slice(0, limit);
   }
 
   let sort: string | undefined;
@@ -448,7 +549,7 @@ export async function resolveSectionBooks(config: HomepageSectionConfig) {
       sort = "bestseller";
   }
 
-  const { books } = await getBooks({ sort, limit: limit * 2 });
+  const { books } = await getBooks({ sort, limit: oversample });
   let filtered = books;
 
   if (config.filter === "new_release") {
@@ -468,10 +569,13 @@ export async function resolveSectionBooks(config: HomepageSectionConfig) {
     }
   }
 
-  return filtered.slice(0, limit);
+  return filtered.filter(isWithinHomepageMaxPrice).slice(0, limit);
 }
 
 export async function resolveSectionDeals(config: HomepageSectionConfig) {
   const limit = config.limit ?? 12;
-  return getActiveDealsWithBooks(limit);
+  const deals = await getActiveDealsWithBooks(limit * 3);
+  return deals
+    .filter((d) => d.deal_price <= HOMEPAGE_MAX_PRICE)
+    .slice(0, limit);
 }

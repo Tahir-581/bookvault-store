@@ -15,6 +15,7 @@ import {
   validateCoverFile,
   validateCoverUrl,
 } from "@/lib/storage/covers";
+import { userHasDeliveredBook } from "@/lib/data/orders";
 
 async function resolveCoverUrl(
   formData: FormData,
@@ -841,13 +842,12 @@ export async function submitReviewAction(formData: FormData) {
   const bookId = formData.get("book_id") as string;
   const rating = Number(formData.get("rating"));
 
-  const { data: purchased } = await supabase
-    .from("store_order_items")
-    .select("id, store_orders!inner(user_id, payment_status)")
-    .eq("book_id", bookId)
-    .eq("store_orders.user_id", user.id)
-    .eq("store_orders.payment_status", "paid")
-    .limit(1);
+  const hasDelivered = await userHasDeliveredBook(user.id, bookId);
+  if (!hasDelivered) {
+    return {
+      error: "Only customers who received this book can leave a review",
+    };
+  }
 
   await supabase.from("store_reviews").insert({
     book_id: bookId,
@@ -856,7 +856,7 @@ export async function submitReviewAction(formData: FormData) {
     rating,
     title: formData.get("title") as string,
     body: formData.get("body") as string,
-    is_verified_purchase: (purchased?.length || 0) > 0,
+    is_verified_purchase: true,
     status: "pending",
   });
 

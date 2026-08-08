@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CoverZoom } from "@/components/store/cover-zoom";
 import { ReviewForm } from "@/components/store/review-form";
@@ -28,6 +30,8 @@ export function BookDetailClient({
   book,
   reviews,
   related,
+  canReview,
+  isSignedIn,
 }: {
   book: BookWithFormats & {
     images?: { url: string; alt: string | null }[];
@@ -35,7 +39,10 @@ export function BookDetailClient({
   };
   reviews: Review[];
   related: BookWithFormats[];
+  canReview: boolean;
+  isSignedIn: boolean;
 }) {
+  const router = useRouter();
   const format = book.formats[0] || null;
   const pricing = getEffectivePrice(format);
   const addToCart = useCartStore((s) => s.addItem);
@@ -52,9 +59,9 @@ export function BookDetailClient({
     ? book.tag_labels
     : book.tags || [];
 
-  function handleAddToCart() {
-    if (!format) return;
-    addToCart({
+  function cartItem() {
+    if (!format) return null;
+    return {
       bookId: book.id,
       formatId: format.id,
       title: book.title,
@@ -63,8 +70,21 @@ export function BookDetailClient({
       format: "hardcover" as BookFormat,
       unitPrice: pricing.displayPrice,
       quantity: 1,
-    });
+    };
+  }
+
+  function handleAddToCart() {
+    const item = cartItem();
+    if (!item) return;
+    addToCart(item);
     toast.success("Added to cart");
+  }
+
+  function handleBuyNow() {
+    const item = cartItem();
+    if (!item) return;
+    addToCart(item);
+    router.push("/checkout");
   }
 
   function handleWishlist() {
@@ -148,7 +168,7 @@ export function BookDetailClient({
             <Button onClick={handleAddToCart} size="lg" className="w-full" disabled={!format}>
               Add to Cart
             </Button>
-            <Button variant="secondary" size="lg" className="w-full" onClick={handleAddToCart} disabled={!format}>
+            <Button variant="secondary" size="lg" className="w-full" onClick={handleBuyNow} disabled={!format}>
               Buy Now
             </Button>
           </div>
@@ -194,7 +214,21 @@ export function BookDetailClient({
         ) : (
           <p className="mb-4 text-sm text-gray-500">No reviews yet. Be the first to review!</p>
         )}
-        <ReviewForm bookId={book.id} slug={book.slug} />
+        {canReview ? (
+          <ReviewForm bookId={book.id} slug={book.slug} />
+        ) : isSignedIn ? (
+          <p className="mt-6 text-sm text-gray-500">
+            You can leave a review after your order for this book has been
+            delivered.
+          </p>
+        ) : (
+          <p className="mt-6 text-sm text-gray-500">
+            <Link href="/auth/login" className="font-medium text-primary underline">
+              Sign in
+            </Link>{" "}
+            after your order is delivered to leave a review.
+          </p>
+        )}
       </div>
 
       {related.length > 0 && (
